@@ -6,6 +6,8 @@ export interface MatchWithPrediction extends Match {
   userPrediction?: Prediction | null;
 }
 
+export type FormResult = "exact_score" | "correct_winner_goal_diff" | "correct_winner_only" | "wrong" | "none";
+
 export interface LeaderboardUser {
   id: string;
   name: string;
@@ -18,6 +20,7 @@ export interface LeaderboardUser {
   totalPoints: number;
   predictionsSubmitted: number;
   predictionsScored: number;
+  formGuide: FormResult[]; // last 5 scored predictions, oldest→newest, padded with "none"
 }
 
 export interface SessionUser {

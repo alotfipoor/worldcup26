@@ -2,9 +2,31 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { LeaderboardUser } from "@/types";
+import type { LeaderboardUser, FormResult } from "@/types";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
+
+const FORM_COLORS: Record<FormResult, string> = {
+  exact_score:                "bg-emerald-500",
+  correct_winner_goal_diff:   "bg-blue-500",
+  correct_winner_only:        "bg-amber-400",
+  wrong:                      "bg-red-400",
+  none:                       "bg-muted-foreground/20",
+};
+
+function FormDots({ guide }: { guide: FormResult[] }) {
+  return (
+    <div className="flex gap-0.5 mt-0.5">
+      {guide.map((result, i) => (
+        <span
+          key={i}
+          className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", FORM_COLORS[result])}
+          title={result === "none" ? "No prediction" : result.replace(/_/g, " ")}
+        />
+      ))}
+    </div>
+  );
+}
 
 function UserAvatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
   const colors = [
@@ -89,9 +111,12 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
                 )}>
                   {user.name}
                 </span>
-                {isMe && (
-                  <span className="text-[10px] text-muted-foreground leading-tight">you</span>
-                )}
+                <div className="flex items-center gap-1.5">
+                  {isMe && (
+                    <span className="text-[10px] text-muted-foreground leading-tight">you</span>
+                  )}
+                  <FormDots guide={user.formGuide} />
+                </div>
               </div>
             </div>
 

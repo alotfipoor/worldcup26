@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { calculateTournamentPoints } from "@/lib/scoring";
-import type { LeaderboardUser } from "@/types";
+import type { LeaderboardUser, FormResult } from "@/types";
 
 export async function GET() {
   const session = await getSession();
@@ -15,7 +15,11 @@ export async function GET() {
     include: {
       predictions: {
         where: { points: { not: null } },
-        select: { points: true, reason: true },
+        select: {
+          points: true,
+          reason: true,
+          match: { select: { kickoff: true } },
+        },
       },
       tournamentPredictions: {
         select: { champion: true, topScorer: true, window: true },
@@ -42,6 +46,16 @@ export async function GET() {
         0
       );
 
+      const last5 = [...user.predictions]
+        .sort((a, b) => new Date(b.match.kickoff).getTime() - new Date(a.match.kickoff).getTime())
+        .slice(0, 5)
+        .reverse();
+      const formGuide: FormResult[] = Array.from({ length: 5 }, (_, i) => {
+        const p = last5[i];
+        if (!p) return "none";
+        return (p.reason as FormResult) ?? "wrong";
+      });
+
       const latestTournament =
         user.tournamentPredictions.find((t) => t.window === "POST_GROUP") ??
         user.tournamentPredictions.find((t) => t.window === "INITIAL");
@@ -65,8 +79,8 @@ export async function GET() {
         tournamentPoints,
         totalPoints: matchPoints + tournamentPoints,
         predictionsSubmitted: user.predictions.length,
-        predictionsScored: user.predictions.filter((p) => p.points !== null)
-          .length,
+        predictionsScored: user.predictions.filter((p) => p.points !== null).length,
+        formGuide,
       };
     })
     .sort((a, b) => b.totalPoints - a.totalPoints);
