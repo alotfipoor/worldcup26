@@ -75,7 +75,13 @@ export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
       </nav>
 
       {/* Bottom section */}
-      <div className="px-3 pb-4 pt-3 border-t border-sidebar-border space-y-1">
+      <div className="px-3 pb-4 pt-3 border-t border-sidebar-border space-y-0.5">
+        {/* Theme toggle */}
+        <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground">
+          <ThemeToggle />
+          <span className="text-sm text-muted-foreground">Theme</span>
+        </div>
+
         {/* User profile link */}
         {userId && (
           <Link
@@ -91,17 +97,14 @@ export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
           </Link>
         )}
 
-        {/* Theme toggle + logout row */}
-        <div className="flex items-center gap-1 px-1">
-          <ThemeToggle />
-          <button
-            onClick={logout}
-            className="flex-1 flex items-center gap-2 px-2 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          >
-            <LogOut style={{ width: 15, height: 15 }} />
-            Sign out
-          </button>
-        </div>
+        {/* Sign out */}
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <LogOut style={{ width: 16, height: 16 }} />
+          Sign out
+        </button>
       </div>
     </div>
   );
