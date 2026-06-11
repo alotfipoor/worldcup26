@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import PredictionForm from "@/components/matches/PredictionForm";
+import PredictionReveal from "@/components/matches/PredictionReveal";
 import { STAGE_LABELS, TEAM_TO_FLAG_CODE, formatGroupName } from "@/lib/constants";
 import { getLockTime } from "@/lib/scoring";
 import { Lock } from "lucide-react";
@@ -101,6 +102,24 @@ export default async function MatchDetailPage({
   const prediction = await prisma.prediction.findUnique({
     where: { userId_matchId: { userId: session.userId, matchId: id } },
   });
+
+  const allPredictions =
+    match.status === "FINISHED"
+      ? await prisma.prediction.findMany({
+          where: { matchId: id, points: { not: null } },
+          include: { user: { select: { id: true, name: true } } },
+        })
+      : [];
+
+  const revealData = allPredictions.map((p) => ({
+    userId: p.userId,
+    userName: p.user.name ?? "Unknown",
+    homeScore: p.homeScore,
+    awayScore: p.awayScore,
+    predictedWinner: p.predictedWinner,
+    points: p.points ?? 0,
+    reason: p.reason,
+  }));
 
   const lockTime = getLockTime(new Date(match.kickoff));
   const isLocked = new Date() >= lockTime;
@@ -230,6 +249,18 @@ export default async function MatchDetailPage({
             />
           )}
         </div>
+
+        {isFinished && revealData.length > 0 && (
+          <>
+            <div className="border-t border-border" />
+            <PredictionReveal
+              predictions={revealData}
+              homeTeam={match.homeTeam}
+              awayTeam={match.awayTeam}
+              currentUserId={session.userId}
+            />
+          </>
+        )}
       </div>
     </PageWrapper>
   );
