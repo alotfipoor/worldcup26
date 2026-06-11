@@ -32,6 +32,12 @@ export default async function PlayerPage({
 
   if (!player || !player.activatedAt) notFound();
 
+  const otherPlayers = await prisma.user.findMany({
+    where: { role: "USER", activatedAt: { not: null }, NOT: { id } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
   const scoredPredictions = player.predictions.filter((p) => p.points !== null);
   const totalPoints = scoredPredictions.reduce((sum, p) => sum + (p.points ?? 0), 0);
   const exactCount = scoredPredictions.filter((p) => p.reason === "exact_score").length;
@@ -67,6 +73,21 @@ export default async function PlayerPage({
             </p>
           </div>
         </div>
+
+        {/* Compare with... */}
+        {otherPlayers.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {otherPlayers.map((other) => (
+              <a
+                key={other.id}
+                href={`/compare/${id}/${other.id}`}
+                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                vs {other.name}
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Score breakdown */}
         <div className="grid grid-cols-3 gap-2">
