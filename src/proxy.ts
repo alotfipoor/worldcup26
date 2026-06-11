@@ -5,30 +5,19 @@ const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET ?? "dev-secret-change-in-production"
 );
 
-// /api/sync does its own auth (SYNC_SECRET bearer token or admin session);
-// it must bypass the cookie check so the cron service can reach it.
-const PUBLIC_PATHS = [
-  "/login",
-  "/api/auth/login",
-  "/api/auth/setup",
-  "/api/health",
-  "/api/sync",
-];
-const ADMIN_PATHS = ["/admin"];
-
+// API routes handle their own authentication — never block them here.
+// Only page routes need the session-cookie guard.
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
-    return NextResponse.next();
-  }
-
-  // Allow public static assets (images, fonts, etc.)
-  if (/\.(?:png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf|eot)$/i.test(pathname)) {
+  // Pass through: infra, static assets, API routes, and the login page
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/api/") ||
+    pathname === "/login" ||
+    /\.(?:png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf|eot)$/i.test(pathname)
+  ) {
     return NextResponse.next();
   }
 
@@ -43,7 +32,7 @@ export async function proxy(req: NextRequest) {
     const role = payload.role as string;
     const userId = payload.userId as string;
 
-    if (ADMIN_PATHS.some((p) => pathname.startsWith(p)) && role !== "ADMIN") {
+    if (pathname.startsWith("/admin") && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
