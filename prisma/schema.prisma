@@ -73,6 +73,7 @@ model Match {
   stage       Stage
   groupName   String?
   syncedAt    DateTime?
+  goals       Json?
 
   predictions Prediction[]
 

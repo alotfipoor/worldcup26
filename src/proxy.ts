@@ -19,6 +19,11 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow public static assets (images, fonts, etc.)
+  if (/\.(?:png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf|eot)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   const token = req.cookies.get("session")?.value;
 
   if (!token) {

@@ -14,6 +14,16 @@ interface ApiScore {
   halfTime: { home: number | null; away: number | null };
 }
 
+export interface ApiGoal {
+  minute: number | null;
+  injuryTime: number | null;
+  type: "REGULAR" | "OWN_GOAL" | "PENALTY";
+  team: { id: number; name: string };
+  scorer: { id: number; name: string };
+  assist: { id: number; name: string } | null;
+  score: { home: number; away: number };
+}
+
 export interface ApiMatch {
   id: number;
   utcDate: string;
@@ -23,6 +33,7 @@ export interface ApiMatch {
   homeTeam: ApiTeam;
   awayTeam: ApiTeam;
   score: ApiScore;
+  goals?: ApiGoal[];
 }
 
 async function apiFetch<T>(path: string): Promise<T> {

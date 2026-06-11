@@ -1,6 +1,10 @@
 import { prisma } from "./prisma";
+import { Prisma } from "@prisma/client";
+import type { Stage, MatchStatus } from "@prisma/client";
+import { calculateMatchPoints } from "./scoring";
 import {
   fetchAllMatches,
+  fetchMatch,
   mapApiStage,
   mapApiStatus,
 } from "./football-api";
@@ -29,11 +33,17 @@ export function maybeTriggerBackgroundSync() {
     })
     .catch(() => {});
 }
-import { calculateMatchPoints } from "./scoring";
-import type { Stage, MatchStatus } from "@prisma/client";
 
 export async function syncMatches(): Promise<{ synced: number; scored: number }> {
   const apiMatches = await fetchAllMatches();
+
+  // Pre-load which matches already have goals stored so we don't re-fetch them
+  const matchesWithGoals = await prisma.match.findMany({
+    where: { status: "FINISHED", NOT: { goals: { equals: [] } } },
+    select: { externalId: true },
+  });
+  const externalIdsWithGoals = new Set(matchesWithGoals.map((m) => m.externalId));
+
   let synced = 0;
 
   for (const m of apiMatches) {
@@ -41,9 +51,35 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
     if (!m.homeTeam?.name || !m.awayTeam?.name) continue;
 
     const stage = mapApiStage(m.stage) as Stage;
-    const status = mapApiStatus(m.status) as MatchStatus;
-    const homeScore = m.score.fullTime.home;
-    const awayScore = m.score.fullTime.away;
+    let status = mapApiStatus(m.status) as MatchStatus;
+    let homeScore = m.score.fullTime.home;
+    let awayScore = m.score.fullTime.away;
+    let goals = m.goals;
+
+    // The competition list endpoint never includes the goals array, and
+    // sometimes marks a match FINISHED before populating fullTime scores.
+    // Fetch the individual endpoint when: scores are missing, OR the match
+    // is finished but we haven't stored goals for it yet.
+    const needsDetail =
+      status === "FINISHED" &&
+      (homeScore === null || awayScore === null || !externalIdsWithGoals.has(m.id));
+
+    if (needsDetail) {
+      try {
+        const detail = await fetchMatch(m.id);
+        homeScore = detail.score.fullTime.home;
+        awayScore = detail.score.fullTime.away;
+        status = mapApiStatus(detail.status) as MatchStatus;
+        if (detail.goals?.length) goals = detail.goals;
+      } catch {
+        // keep whatever the list endpoint returned
+      }
+    }
+
+    const goalsJson: Prisma.InputJsonArray | undefined =
+      goals && goals.length > 0
+        ? (goals as unknown as Prisma.InputJsonArray)
+        : undefined;
 
     await prisma.match.upsert({
       where: { externalId: m.id },
@@ -58,6 +94,7 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
         stage,
         groupName: m.group ?? null,
         syncedAt: new Date(),
+        goals: goalsJson ?? ([] as unknown as Prisma.InputJsonArray),
       },
       update: {
         homeTeam: m.homeTeam.name,
@@ -69,6 +106,7 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
         stage,
         groupName: m.group ?? null,
         syncedAt: new Date(),
+        ...(goalsJson !== undefined ? { goals: goalsJson } : {}),
       },
     });
     synced++;

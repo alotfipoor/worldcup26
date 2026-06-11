@@ -5,6 +5,7 @@ import { getLockTime } from "@/lib/scoring";
 import { TEAM_TO_FLAG_CODE, formatGroupName, STAGE_LABELS } from "@/lib/constants";
 import type { Match, Prediction } from "@prisma/client";
 import { Lock, CheckCircle2, Clock3, Zap } from "lucide-react";
+import type { ApiGoal } from "@/lib/football-api";
 
 type FlagKey = keyof typeof CountryFlags;
 
@@ -178,6 +179,34 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
           <Flag team={match.awayTeam} size="md" />
         </div>
       </div>
+
+      {/* Goal scorers (finished matches only) */}
+      {isFinished && Array.isArray(match.goals) && (match.goals as unknown as ApiGoal[]).length > 0 && (
+        <div className="grid grid-cols-2 gap-x-2 px-4 pb-2 text-[11px] text-muted-foreground leading-relaxed">
+          <div className="space-y-0">
+            {(match.goals as unknown as ApiGoal[])
+              .filter((g) => g.type !== "OWN_GOAL" ? g.team.name === match.homeTeam : g.team.name !== match.homeTeam)
+              .map((g, i) => (
+                <div key={i}>
+                  {g.type === "PENALTY" ? "⚽ P" : g.type === "OWN_GOAL" ? "⚽ OG" : "⚽"}{" "}
+                  {g.scorer.name.split(" ").at(-1)}{" "}
+                  {g.minute != null ? `${g.minute}${g.injuryTime ? `+${g.injuryTime}` : ""}'` : ""}
+                </div>
+              ))}
+          </div>
+          <div className="space-y-0 text-right">
+            {(match.goals as unknown as ApiGoal[])
+              .filter((g) => g.type !== "OWN_GOAL" ? g.team.name === match.awayTeam : g.team.name !== match.awayTeam)
+              .map((g, i) => (
+                <div key={i}>
+                  {g.scorer.name.split(" ").at(-1)}{" "}
+                  {g.minute != null ? `${g.minute}${g.injuryTime ? `+${g.injuryTime}` : ""}'` : ""}{" "}
+                  {g.type === "PENALTY" ? "P ⚽" : g.type === "OWN_GOAL" ? "OG ⚽" : "⚽"}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Prediction footer */}
       <div className={cn(

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Home, Calendar, Trophy, Star, Settings, LogOut, BookOpen, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,9 +47,7 @@ export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
       {/* Logo */}
       <div className="px-4 py-5 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-xl flex-shrink-0">
-            ⚽
-          </div>
+          <Image src="/logo.png" alt="KickPick" width={36} height={36} className="flex-shrink-0" style={{ height: "auto" }} />
           <div>
             <div className="font-bold text-sm leading-tight text-sidebar-foreground">KickPick</div>
             <div className="text-[10px] text-muted-foreground leading-tight">WC26 Predictions</div>

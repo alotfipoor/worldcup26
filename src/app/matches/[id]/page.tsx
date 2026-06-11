@@ -7,6 +7,7 @@ import { STAGE_LABELS, TEAM_TO_FLAG_CODE, formatGroupName } from "@/lib/constant
 import { getLockTime } from "@/lib/scoring";
 import { Lock } from "lucide-react";
 import * as CountryFlags from "country-flag-icons/react/3x2";
+import type { ApiGoal } from "@/lib/football-api";
 
 type FlagKey = keyof typeof CountryFlags;
 
@@ -37,6 +38,49 @@ function formatMatchDate(kickoff: Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(kickoff));
+}
+
+function GoalScorers({
+  goals,
+  homeTeam,
+  awayTeam,
+}: {
+  goals: ApiGoal[];
+  homeTeam: string;
+  awayTeam: string;
+}) {
+  const homeGoals = goals.filter(
+    (g) => g.type !== "OWN_GOAL" ? g.team.name === homeTeam : g.team.name !== homeTeam
+  );
+  const awayGoals = goals.filter(
+    (g) => g.type !== "OWN_GOAL" ? g.team.name === awayTeam : g.team.name !== awayTeam
+  );
+
+  function GoalLine({ goal }: { goal: ApiGoal }) {
+    const minute = goal.minute != null
+      ? `${goal.minute}${goal.injuryTime ? `+${goal.injuryTime}` : ""}'`
+      : "";
+    const label =
+      goal.type === "PENALTY" ? "⚽ P" :
+      goal.type === "OWN_GOAL" ? "⚽ OG" :
+      "⚽";
+    return (
+      <span className="text-xs text-muted-foreground">
+        {label} {goal.scorer.name} {minute}
+      </span>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <div className="space-y-0.5">
+        {homeGoals.map((g, i) => <GoalLine key={i} goal={g} />)}
+      </div>
+      <div className="space-y-0.5 text-right">
+        {awayGoals.map((g, i) => <GoalLine key={i} goal={g} />)}
+      </div>
+    </div>
+  );
 }
 
 export const revalidate = 30;
@@ -112,6 +156,11 @@ export default async function MatchDetailPage({
             <span className="text-sm font-semibold text-center">{match.awayTeam}</span>
           </div>
         </div>
+
+        {/* Goal scorers */}
+        {isFinished && Array.isArray(match.goals) && (match.goals as unknown as ApiGoal[]).length > 0 && (
+          <GoalScorers goals={match.goals as unknown as ApiGoal[]} homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
+        )}
 
         {/* Divider */}
         <div className="border-t border-border" />

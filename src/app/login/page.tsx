@@ -80,15 +80,12 @@ export default async function LoginPage() {
 
       <div className="relative w-full max-w-4xl mx-auto">
         {/* Branding header — centered above both columns */}
-        <div className="flex flex-col items-center mb-8 gap-3">
+        <div className="flex flex-col items-center mb-8 gap-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.PNG" alt="KickPick" className="w-28 h-28 object-contain" />
-          <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight">KickPick</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Pick your result before the kick-off.
-            </p>
-          </div>
+          <img src="/full_logo.png" alt="KickPick" className="w-80 h-80 object-contain" />
+          <p className="text-sm text-muted-foreground">
+            Pick your result before the kick-off.
+          </p>
         </div>
 
         <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-10 justify-center">

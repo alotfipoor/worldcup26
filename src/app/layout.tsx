@@ -41,6 +41,7 @@ export default async function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} h-full`}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <body className="h-full bg-background text-foreground antialiased">
         <ThemeProvider>
