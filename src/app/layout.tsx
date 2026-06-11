@@ -1,19 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
 import BottomNav from "@/components/layout/BottomNav";
 import Sidebar from "@/components/layout/Sidebar";
+import MobileHeader from "@/components/layout/MobileHeader";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +23,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1421" },
+  ],
 };
 
 export default async function RootLayout({
@@ -39,39 +40,43 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="h-full bg-background text-foreground">
-        {isLoggedIn ? (
-          <div className="flex h-full">
-            {/* Desktop sidebar */}
-            <aside className="hidden md:flex md:w-52 lg:w-60 flex-col flex-shrink-0 border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
-              <Sidebar
-                isAdmin={session.user.role === "ADMIN"}
-                userName={session.user.name}
-                userId={session.userId}
-              />
-            </aside>
+      <body className="h-full bg-background text-foreground antialiased">
+        <ThemeProvider>
+          {isLoggedIn ? (
+            <div className="flex h-full">
+              {/* Desktop sidebar */}
+              <aside className="hidden md:flex md:w-52 lg:w-60 flex-col flex-shrink-0 border-r border-sidebar-border bg-sidebar sticky top-0 h-screen overflow-y-auto">
+                <Sidebar
+                  isAdmin={session.user.role === "ADMIN"}
+                  userName={session.user.name}
+                  userId={session.userId}
+                />
+              </aside>
 
-            {/* Main scrollable area */}
-            <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
-              <div className="flex-1 flex justify-center">
-                <div className="w-full max-w-2xl">
-                  {children}
+              {/* Main area */}
+              <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+                {/* Mobile header */}
+                <MobileHeader />
+                <div className="flex-1 flex justify-center">
+                  <div className="w-full max-w-2xl">
+                    {children}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          children
-        )}
+          ) : (
+            children
+          )}
 
-        {/* Mobile bottom nav */}
-        {isLoggedIn && (
-          <BottomNav isAdmin={session.user.role === "ADMIN"} />
-        )}
+          {isLoggedIn && (
+            <BottomNav isAdmin={session.user.role === "ADMIN"} />
+          )}
 
-        <Toaster position="top-center" richColors />
+          <Toaster position="top-center" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );
