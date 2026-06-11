@@ -66,8 +66,7 @@ export async function fetchLiveMatches(): Promise<ApiMatch[]> {
 }
 
 export async function fetchMatch(id: number): Promise<ApiMatch> {
-  const data = await apiFetch<{ match: ApiMatch }>(`/matches/${id}`);
-  return data.match;
+  return apiFetch<ApiMatch>(`/matches/${id}`);
 }
 
 export function mapApiStage(stage: string): string {

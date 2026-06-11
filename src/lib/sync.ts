@@ -37,12 +37,16 @@ export function maybeTriggerBackgroundSync() {
 export async function syncMatches(): Promise<{ synced: number; scored: number }> {
   const apiMatches = await fetchAllMatches();
 
-  // Pre-load which matches already have goals stored so we don't re-fetch them
-  const matchesWithGoals = await prisma.match.findMany({
-    where: { status: "FINISHED", NOT: { goals: { equals: [] } } },
-    select: { externalId: true },
+  // Pre-load which finished matches already have goals so we don't re-fetch them
+  const finishedInDb = await prisma.match.findMany({
+    where: { status: "FINISHED" },
+    select: { externalId: true, goals: true },
   });
-  const externalIdsWithGoals = new Set(matchesWithGoals.map((m) => m.externalId));
+  const externalIdsWithGoals = new Set(
+    finishedInDb
+      .filter((m) => Array.isArray(m.goals) && (m.goals as unknown[]).length > 0)
+      .map((m) => m.externalId)
+  );
 
   let synced = 0;
 
@@ -81,13 +85,24 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
         ? (goals as unknown as Prisma.InputJsonArray)
         : undefined;
 
+    // For updates, never overwrite an existing score with null — if the API
+    // temporarily returns null for a finished match, keep what's in the DB.
+    const scoreForCreate = status === "FINISHED" ? homeScore : null;
+    const scoreUpdate =
+      status !== "FINISHED"
+        ? { homeScore: null, awayScore: null }
+        : {
+            ...(homeScore !== null ? { homeScore } : {}),
+            ...(awayScore !== null ? { awayScore } : {}),
+          };
+
     await prisma.match.upsert({
       where: { externalId: m.id },
       create: {
         externalId: m.id,
         homeTeam: m.homeTeam.name,
         awayTeam: m.awayTeam.name,
-        homeScore: status === "FINISHED" ? homeScore : null,
+        homeScore: scoreForCreate,
         awayScore: status === "FINISHED" ? awayScore : null,
         status,
         kickoff: new Date(m.utcDate),
@@ -99,8 +114,7 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
       update: {
         homeTeam: m.homeTeam.name,
         awayTeam: m.awayTeam.name,
-        homeScore: status === "FINISHED" ? homeScore : null,
-        awayScore: status === "FINISHED" ? awayScore : null,
+        ...scoreUpdate,
         status,
         kickoff: new Date(m.utcDate),
         stage,
