@@ -35,6 +35,11 @@ enum PredictionWindow {
   POST_GROUP
 }
 
+enum SideBetAnswerType {
+  TEXT
+  CHOICE
+}
+
 model User {
   id                    String                 @id @default(cuid())
   name                  String?
@@ -46,6 +51,7 @@ model User {
   sessions              Session[]
   predictions           Prediction[]
   tournamentPredictions TournamentPrediction[]
+  sideBetPredictions    SideBetPrediction[]
 }
 
 model Session {
@@ -114,4 +120,33 @@ model TournamentPrediction {
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, window])
+}
+
+model SideBet {
+  id            String              @id @default(cuid())
+  question      String
+  answerType    SideBetAnswerType   @default(TEXT)
+  options       Json?
+  closesAt      DateTime
+  correctAnswer String?
+  pointsReward  Int                 @default(10)
+  resolved      Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  predictions   SideBetPrediction[]
+}
+
+model SideBetPrediction {
+  id            String    @id @default(cuid())
+  userId        String
+  sideBetId     String
+  answer        String
+  pointsAwarded Int?
+  createdAt     DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sideBet       SideBet   @relation(fields: [sideBetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sideBetId])
+  @@index([userId])
+  @@index([sideBetId])
 }
