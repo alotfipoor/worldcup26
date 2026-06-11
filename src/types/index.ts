@@ -30,3 +30,18 @@ export interface SessionUser {
   role: string;
   inviteCode: string;
 }
+
+export interface SideBetItem {
+  id: string;
+  question: string;
+  answerType: "TEXT" | "CHOICE";
+  options: string[] | null;
+  closesAt: string; // ISO string
+  correctAnswer: string | null;
+  pointsReward: number;
+  resolved: boolean;
+  createdAt: string;
+  myAnswer: string | null;
+  myPointsAwarded: number | null;
+  predictionCount: number;
+}
