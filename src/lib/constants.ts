@@ -155,7 +155,6 @@ export const TEAM_TO_FLAG_CODE: Record<string, string> = {
   Norway: "NO",
   Finland: "FI",
   Iceland: "IS",
-  Switzerland: "CH",
   Poland: "PL",
   Russia: "RU",
 };
