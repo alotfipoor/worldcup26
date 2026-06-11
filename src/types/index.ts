@@ -18,6 +18,7 @@ export interface LeaderboardUser {
   winnerOnlyCount: number;
   matchPoints: number;
   tournamentPoints: number;
+  sideBetPoints: number;
   totalPoints: number;
   predictionsSubmitted: number;
   predictionsScored: number;

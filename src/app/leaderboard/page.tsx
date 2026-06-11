@@ -26,6 +26,10 @@ async function getLeaderboard(): Promise<LeaderboardUser[]> {
       tournamentPredictions: {
         select: { champion: true, topScorer: true, window: true },
       },
+      sideBetPredictions: {
+        where: { pointsAwarded: { not: null } },
+        select: { pointsAwarded: true },
+      },
     },
   });
 
@@ -61,6 +65,11 @@ async function getLeaderboard(): Promise<LeaderboardUser[]> {
             })
           : 0;
 
+      const sideBetPoints = user.sideBetPredictions.reduce(
+        (s, p) => s + (p.pointsAwarded ?? 0),
+        0
+      );
+
       return {
         id: user.id,
         name: user.name ?? "Unknown",
@@ -70,7 +79,8 @@ async function getLeaderboard(): Promise<LeaderboardUser[]> {
         winnerOnlyCount,
         matchPoints,
         tournamentPoints,
-        totalPoints: matchPoints + tournamentPoints,
+        sideBetPoints,
+        totalPoints: matchPoints + tournamentPoints + sideBetPoints,
         predictionsSubmitted: user.predictions.length,
         predictionsScored: user.predictions.filter((p) => p.points !== null).length,
         formGuide,
