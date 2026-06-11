@@ -1,0 +1,98 @@
+export type ScoringReason =
+  | "exact_score"
+  | "correct_winner_with_goals"
+  | "correct_winner_only"
+  | "wrong";
+
+export interface ScoringResult {
+  points: number;
+  reason: ScoringReason;
+}
+
+export const POINTS = {
+  exact_score: 6,
+  correct_winner_with_goals: 4,
+  correct_winner_only: 2,
+  wrong: 0,
+  tournament_champion: 15,
+  tournament_top_scorer: 15,
+} as const;
+
+function getWinner(
+  home: number,
+  away: number
+): "home" | "away" | "draw" {
+  if (home > away) return "home";
+  if (away > home) return "away";
+  return "draw";
+}
+
+export function calculateMatchPoints(
+  prediction: {
+    homeScore: number | null;
+    awayScore: number | null;
+    predictedWinner: string | null;
+  },
+  match: { homeScore: number; awayScore: number }
+): ScoringResult {
+  const actualWinner = getWinner(match.homeScore, match.awayScore);
+  const hasScores =
+    prediction.homeScore !== null && prediction.awayScore !== null;
+
+  if (hasScores) {
+    if (
+      prediction.homeScore === match.homeScore &&
+      prediction.awayScore === match.awayScore
+    ) {
+      return { points: POINTS.exact_score, reason: "exact_score" };
+    }
+    const predictedWinner = getWinner(
+      prediction.homeScore!,
+      prediction.awayScore!
+    );
+    if (predictedWinner === actualWinner) {
+      return {
+        points: POINTS.correct_winner_with_goals,
+        reason: "correct_winner_with_goals",
+      };
+    }
+    return { points: 0, reason: "wrong" };
+  }
+
+  if (prediction.predictedWinner === actualWinner) {
+    return {
+      points: POINTS.correct_winner_only,
+      reason: "correct_winner_only",
+    };
+  }
+  return { points: 0, reason: "wrong" };
+}
+
+export function calculateTournamentPoints(
+  prediction: { champion: string | null; topScorer: string | null },
+  actual: { champion: string; topScorer: string }
+): number {
+  let points = 0;
+  if (
+    prediction.champion &&
+    prediction.champion.toLowerCase() === actual.champion.toLowerCase()
+  ) {
+    points += POINTS.tournament_champion;
+  }
+  if (
+    prediction.topScorer &&
+    prediction.topScorer.toLowerCase() === actual.topScorer.toLowerCase()
+  ) {
+    points += POINTS.tournament_top_scorer;
+  }
+  return points;
+}
+
+export function isPredictionLocked(kickoff: Date): boolean {
+  const lockTime = new Date(kickoff.getTime() - 24 * 60 * 60 * 1000);
+  return new Date() >= lockTime;
+}
+
+export function getLockTime(kickoff: Date): Date {
+  return new Date(kickoff.getTime() - 24 * 60 * 60 * 1000);
+}

@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
+enum Stage {
+  GROUP
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  THIRD_PLACE
+  FINAL
+}
+
+enum PredictionWindow {
+  INITIAL
+  POST_GROUP
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  name                  String?
+  inviteCode            String                 @unique
+  role                  Role                   @default(USER)
+  createdAt             DateTime               @default(now())
+  activatedAt           DateTime?
+
+  sessions              Session[]
+  predictions           Prediction[]
+  tournamentPredictions TournamentPrediction[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Match {
+  id          String      @id @default(cuid())
+  externalId  Int         @unique
+  homeTeam    String
+  awayTeam    String
+  homeScore   Int?
+  awayScore   Int?
+  status      MatchStatus @default(SCHEDULED)
+  kickoff     DateTime
+  stage       Stage
+  groupName   String?
+  syncedAt    DateTime?
+
+  predictions Prediction[]
+
+  @@index([kickoff])
+  @@index([status])
+  @@index([stage])
+}
+
+model Prediction {
+  id               String   @id @default(cuid())
+  userId           String
+  matchId          String
+  homeScore        Int?
+  awayScore        Int?
+  predictedWinner  String?
+  points           Int?
+  reason           String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match            Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId])
+  @@index([userId])
+  @@index([matchId])
+}
+
+model TournamentPrediction {
+  id        String           @id @default(cuid())
+  userId    String
+  champion  String?
+  topScorer String?
+  window    PredictionWindow @default(INITIAL)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, window])
+}
