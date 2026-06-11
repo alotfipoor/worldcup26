@@ -9,6 +9,28 @@ import { WC2026_TEAMS, TEAM_TO_FLAG_CODE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Search } from "lucide-react";
 import type { TournamentPrediction } from "@prisma/client";
+import * as CountryFlags from "country-flag-icons/react/3x2";
+
+type FlagKey = keyof typeof CountryFlags;
+
+function TeamFlag({ team }: { team: string }) {
+  const code = TEAM_TO_FLAG_CODE[team] as FlagKey | undefined;
+  const FlagComponent = code
+    ? (CountryFlags[code] as React.ComponentType<{ className?: string }> | undefined)
+    : undefined;
+
+  return (
+    <span className="w-5 h-[15px] flex-shrink-0 rounded-sm overflow-hidden shadow-sm inline-block">
+      {FlagComponent ? (
+        <FlagComponent className="w-full h-full" />
+      ) : (
+        <span className="w-full h-full bg-muted flex items-center justify-center text-[7px] font-bold text-muted-foreground">
+          {team.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+    </span>
+  );
+}
 
 interface TournamentFormProps {
   window: "INITIAL" | "POST_GROUP";
@@ -26,7 +48,6 @@ function TeamOption({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const code = TEAM_TO_FLAG_CODE[team];
   return (
     <button
       onClick={onSelect}
@@ -37,18 +58,7 @@ function TeamOption({
           : "hover:bg-muted border border-transparent"
       )}
     >
-      {code ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={`https://flagcdn.com/20x14/${code.toLowerCase().replace("gb-eng", "gb")}.png`}
-          width={20}
-          height={14}
-          alt={team}
-          className="rounded-sm object-cover flex-shrink-0"
-        />
-      ) : (
-        <span className="w-5 h-3.5 bg-muted rounded-sm flex-shrink-0" />
-      )}
+      <TeamFlag team={team} />
       <span className="text-sm">{team}</span>
       {selected && <CheckCircle2 className="h-4 w-4 ml-auto flex-shrink-0" />}
     </button>
@@ -101,16 +111,7 @@ export default function TournamentForm({
           <div className="flex items-center gap-2 text-sm">
             {activePrediction?.champion ? (
               <>
-                {TEAM_TO_FLAG_CODE[activePrediction.champion] && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`https://flagcdn.com/20x14/${TEAM_TO_FLAG_CODE[activePrediction.champion].toLowerCase().replace("gb-eng", "gb")}.png`}
-                    width={20}
-                    height={14}
-                    alt={activePrediction.champion}
-                    className="rounded-sm"
-                  />
-                )}
+                <TeamFlag team={activePrediction.champion} />
                 <span className="font-medium">{activePrediction.champion}</span>
               </>
             ) : (

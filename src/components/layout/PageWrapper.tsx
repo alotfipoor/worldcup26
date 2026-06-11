@@ -7,12 +7,7 @@ interface PageWrapperProps {
 
 export default function PageWrapper({ children, className }: PageWrapperProps) {
   return (
-    <main
-      className={cn(
-        "max-w-lg mx-auto px-4 pt-4 pb-24 min-h-screen",
-        className
-      )}
-    >
+    <main className={cn("w-full max-w-2xl mx-auto px-4 pt-4 pb-24 md:pb-8 md:pt-6", className)}>
       {children}
     </main>
   );

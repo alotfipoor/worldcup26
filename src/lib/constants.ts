@@ -51,7 +51,9 @@ export const WC2026_TEAMS = [
 
 export type WC2026Team = (typeof WC2026_TEAMS)[number];
 
+// Maps team name (including API variants) to ISO 3166-1 alpha-2 code
 export const TEAM_TO_FLAG_CODE: Record<string, string> = {
+  // Standard names
   Argentina: "AR",
   Australia: "AU",
   Belgium: "BE",
@@ -65,7 +67,7 @@ export const TEAM_TO_FLAG_CODE: Record<string, string> = {
   Croatia: "HR",
   Ecuador: "EC",
   Egypt: "EG",
-  England: "GB-ENG",
+  England: "GB",
   France: "FR",
   Germany: "DE",
   Ghana: "GH",
@@ -100,6 +102,62 @@ export const TEAM_TO_FLAG_CODE: Record<string, string> = {
   Ukraine: "UA",
   "United States": "US",
   Uruguay: "UY",
+
+  // API variant names (football-data.org returns these)
+  "Korea Republic": "KR",
+  USA: "US",
+  "United States of America": "US",
+  "Côte d'Ivoire": "CI",
+  "Cote d'Ivoire": "CI",
+  "IR Iran": "IR",
+  "Bosnia and Herzegovina": "BA",
+  "Bosnia-Herzegovina": "BA",
+  Czechia: "CZ",
+  "Czech Republic": "CZ",
+  Scotland: "GB",
+  Wales: "GB",
+  "Northern Ireland": "GB",
+  "China PR": "CN",
+  China: "CN",
+  "Congo DR": "CD",
+  "DR Congo": "CD",
+  "Burkina Faso": "BF",
+  Algeria: "DZ",
+  Tunisia: "TN",
+  Zambia: "ZM",
+  Zimbabwe: "ZW",
+  Venezuela: "VE",
+  Jamaica: "JM",
+  "El Salvador": "SV",
+  Guatemala: "GT",
+  Cuba: "CU",
+  Curacao: "CW",
+  "New Caledonia": "NC",
+  Fiji: "FJ",
+  Tahiti: "PF",
+  Thailand: "TH",
+  Vietnam: "VN",
+  Philippines: "PH",
+  Iraq: "IQ",
+  Jordan: "JO",
+  Kuwait: "KW",
+  Oman: "OM",
+  Bahrain: "BH",
+  Palestine: "PS",
+  Turkey: "TR",
+  Türkiye: "TR",
+  Greece: "GR",
+  Romania: "RO",
+  Slovakia: "SK",
+  Austria: "AT",
+  Denmark: "DK",
+  Sweden: "SE",
+  Norway: "NO",
+  Finland: "FI",
+  Iceland: "IS",
+  Switzerland: "CH",
+  Poland: "PL",
+  Russia: "RU",
 };
 
 export const STAGE_LABELS: Record<string, string> = {
@@ -121,3 +179,9 @@ export const STAGE_ORDER: Record<string, number> = {
   THIRD_PLACE: 6,
   FINAL: 7,
 };
+
+export function formatGroupName(group: string | null | undefined): string {
+  if (!group) return "";
+  // "GROUP_A" → "Group A", "GROUP_B" → "Group B"
+  return group.replace(/^GROUP_/, "Group ").replace(/_/g, " ");
+}
