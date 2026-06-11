@@ -1,4 +1,5 @@
 import type { Match, Prediction, User, TournamentPrediction } from "@prisma/client";
+import type { ScoringReason } from "@/lib/scoring";
 
 export type { Match, Prediction, User, TournamentPrediction };
 
@@ -6,7 +7,7 @@ export interface MatchWithPrediction extends Match {
   userPrediction?: Prediction | null;
 }
 
-export type FormResult = "exact_score" | "correct_winner_goal_diff" | "correct_winner_only" | "wrong" | "none";
+export type FormResult = ScoringReason | "none";
 
 export interface LeaderboardUser {
   id: string;
