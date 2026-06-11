@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Calendar, Trophy, Star, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "Home" },
@@ -41,15 +42,18 @@ export default function BottomNav({ isAdmin }: BottomNavProps) {
                 "flex items-center justify-center w-8 h-6 rounded-lg transition-colors",
                 active ? "bg-primary/15" : ""
               )}>
-                <Icon className={cn("h-4.5 w-4.5", active && "stroke-[2.5]")} style={{ width: 18, height: 18 }} />
+                <Icon style={{ width: 18, height: 18 }} className={cn(active && "stroke-[2.5]")} />
               </div>
               <span>{label}</span>
             </Link>
           );
         })}
+
+        {/* Theme toggle slot */}
+        <div className="flex flex-col items-center justify-center min-h-[56px] px-2">
+          <ThemeToggle />
+        </div>
       </div>
-      {/* Safe area */}
-      <div className="h-safe-area-inset-bottom" />
     </nav>
   );
 }

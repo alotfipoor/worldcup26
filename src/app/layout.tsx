@@ -4,7 +4,6 @@ import "./globals.css";
 import { getSession } from "@/lib/auth";
 import BottomNav from "@/components/layout/BottomNav";
 import Sidebar from "@/components/layout/Sidebar";
-import MobileHeader from "@/components/layout/MobileHeader";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -58,8 +57,6 @@ export default async function RootLayout({
 
               {/* Main area */}
               <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
-                {/* Mobile header */}
-                <MobileHeader />
                 <div className="flex-1 flex justify-center">
                   <div className="w-full max-w-2xl">
                     {children}
