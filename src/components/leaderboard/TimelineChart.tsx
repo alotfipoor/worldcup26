@@ -77,18 +77,23 @@ export default function TimelineChart({ data, currentUserId }: TimelineChartProp
               );
             }}
           />
-          {data.players.map((player, i) => (
-            <Line
-              key={player.id}
-              type="monotone"
-              dataKey={player.id}
-              stroke={PLAYER_COLORS[i % PLAYER_COLORS.length]}
-              strokeWidth={player.id === currentUserId ? 2.5 : 1.5}
-              strokeOpacity={player.id === currentUserId ? 1 : 0.65}
-              dot={false}
-              activeDot={{ r: 4 }}
-            />
-          ))}
+          {data.players.map((player) => {
+            const colorIdx =
+              player.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) %
+              PLAYER_COLORS.length;
+            return (
+              <Line
+                key={player.id}
+                type="monotone"
+                dataKey={player.id}
+                stroke={PLAYER_COLORS[colorIdx]}
+                strokeWidth={player.id === currentUserId ? 2.5 : 1.5}
+                strokeOpacity={player.id === currentUserId ? 1 : 0.65}
+                dot={false}
+                activeDot={{ r: 4 }}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

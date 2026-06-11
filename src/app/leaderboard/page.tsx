@@ -6,8 +6,8 @@ import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 import TimelineChart from "@/components/leaderboard/TimelineChart";
 import AutoRefresh from "@/components/AutoRefresh";
 import { calculateTournamentPoints } from "@/lib/scoring";
+import { getTimelineData } from "@/lib/timeline";
 import type { LeaderboardUser, FormResult } from "@/types";
-import type { TimelineData } from "@/app/api/stats/timeline/route";
 
 export const revalidate = 30;
 
@@ -86,43 +86,7 @@ export default async function LeaderboardPage() {
 
   const [users, timelineData] = await Promise.all([
     getLeaderboard(),
-    (async (): Promise<TimelineData> => {
-      const matches = await prisma.match.findMany({
-        where: {
-          status: "FINISHED",
-          predictions: { some: { points: { not: null } } },
-        },
-        select: { id: true, homeTeam: true, awayTeam: true, kickoff: true },
-        orderBy: { kickoff: "asc" },
-      });
-      if (matches.length === 0) return { matches: [], players: [] };
-      const allUsers = await prisma.user.findMany({
-        where: { role: "USER", activatedAt: { not: null } },
-        select: {
-          id: true,
-          name: true,
-          predictions: {
-            where: { points: { not: null } },
-            select: { matchId: true, points: true },
-          },
-        },
-      });
-      const matchList = matches.map((m) => ({
-        id: m.id,
-        label: `${m.homeTeam} v ${m.awayTeam}`,
-        kickoff: m.kickoff.toISOString(),
-      }));
-      const players = allUsers.map((user) => {
-        const ptMap = new Map(user.predictions.map((p) => [p.matchId, p.points ?? 0]));
-        let cum = 0;
-        return {
-          id: user.id,
-          name: user.name ?? "Unknown",
-          cumulative: matches.map((m) => { cum += ptMap.get(m.id) ?? 0; return cum; }),
-        };
-      });
-      return { matches: matchList, players };
-    })(),
+    getTimelineData(),
   ]);
 
   return (
