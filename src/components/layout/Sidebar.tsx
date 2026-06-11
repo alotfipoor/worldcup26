@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Trophy, Star, Settings, LogOut, BookOpen } from "lucide-react";
+import { Home, Calendar, Trophy, Star, Settings, LogOut, BookOpen, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "Home" },
@@ -25,6 +26,9 @@ interface SidebarProps {
 export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const items = isAdmin
     ? [...NAV_ITEMS, { href: "/admin", icon: Settings, label: "Admin" }]
@@ -76,22 +80,29 @@ export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
 
       {/* Bottom section */}
       <div className="px-3 pb-4 pt-3 border-t border-sidebar-border space-y-0.5">
-        {/* Theme toggle */}
-        <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground">
-          <ThemeToggle />
-          <span className="text-sm text-muted-foreground">Theme</span>
-        </div>
+        {/* Theme toggle — same structure as the rows below */}
+        {mounted && (
+          <button
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            {resolvedTheme === "dark"
+              ? <Sun style={{ width: 16, height: 16 }} className="flex-shrink-0" />
+              : <Moon style={{ width: 16, height: 16 }} className="flex-shrink-0" />}
+            {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+          </button>
+        )}
 
         {/* User profile link */}
         {userId && (
           <Link
             href={`/players/${userId}`}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-muted transition-colors group"
+            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted transition-colors group"
           >
-            <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+            <div className="w-4 h-4 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center text-[8px] font-bold text-primary flex-shrink-0">
               {userName?.slice(0, 1).toUpperCase() ?? "?"}
             </div>
-            <span className="text-sm font-medium truncate text-sidebar-foreground group-hover:text-foreground transition-colors">
+            <span className="text-sm font-medium truncate text-muted-foreground group-hover:text-foreground transition-colors">
               {userName ?? "Me"}
             </span>
           </Link>
@@ -102,7 +113,7 @@ export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
           onClick={logout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          <LogOut style={{ width: 16, height: 16 }} />
+          <LogOut style={{ width: 16, height: 16 }} className="flex-shrink-0" />
           Sign out
         </button>
       </div>
