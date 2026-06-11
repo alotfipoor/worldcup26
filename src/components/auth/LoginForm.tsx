@@ -45,18 +45,7 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Logo */}
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mb-3 text-2xl shadow-lg">
-          ⚽
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight">KickPick</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pick your result before the kick-off.
-        </p>
-      </div>
-
+    <div className="space-y-4">
       {/* Form card */}
       <div className="bg-card border border-border rounded-2xl p-6 shadow-xl shadow-black/5 dark:shadow-black/30">
         {step === "code" ? (

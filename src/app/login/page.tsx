@@ -3,14 +3,14 @@ import { calculateTournamentPoints } from "@/lib/scoring";
 import LoginForm from "@/components/auth/LoginForm";
 import { cn } from "@/lib/utils";
 
-export const revalidate = 60;
+export const revalidate = 30;
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 async function getStandings() {
   try {
     const users = await prisma.user.findMany({
-      where: { activatedAt: { not: null } },
+      where: { role: "USER", activatedAt: { not: null } },
       include: {
         predictions: {
           where: { points: { not: null } },
@@ -79,7 +79,19 @@ export default async function LoginPage() {
       </div>
 
       <div className="relative w-full max-w-4xl mx-auto">
-        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 justify-center">
+        {/* Branding header — centered above both columns */}
+        <div className="flex flex-col items-center mb-8 gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.PNG" alt="KickPick" className="w-28 h-28 object-contain" />
+          <div className="text-center">
+            <h1 className="text-2xl font-bold tracking-tight">KickPick</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Pick your result before the kick-off.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-10 justify-center">
 
           {/* Login form */}
           <div className="w-full max-w-sm mx-auto lg:mx-0 flex-shrink-0">
