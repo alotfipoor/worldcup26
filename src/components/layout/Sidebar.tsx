@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Trophy, Star, Settings, LogOut } from "lucide-react";
+import { Home, Calendar, Trophy, Star, Settings, LogOut, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/matches", icon: Calendar, label: "Matches" },
   { href: "/leaderboard", icon: Trophy, label: "Standings" },
   { href: "/tournament", icon: Star, label: "Winner" },
+  { href: "/rules", icon: BookOpen, label: "Rules" },
 ];
 
 interface SidebarProps {

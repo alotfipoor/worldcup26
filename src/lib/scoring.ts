@@ -1,6 +1,6 @@
 export type ScoringReason =
   | "exact_score"
-  | "correct_winner_with_goals"
+  | "correct_winner_goal_diff"
   | "correct_winner_only"
   | "wrong";
 
@@ -11,7 +11,7 @@ export interface ScoringResult {
 
 export const POINTS = {
   exact_score: 6,
-  correct_winner_with_goals: 4,
+  correct_winner_goal_diff: 4,
   correct_winner_only: 2,
   wrong: 0,
   tournament_champion: 15,
@@ -40,25 +40,37 @@ export function calculateMatchPoints(
     prediction.homeScore !== null && prediction.awayScore !== null;
 
   if (hasScores) {
+    // Exact score
     if (
       prediction.homeScore === match.homeScore &&
       prediction.awayScore === match.awayScore
     ) {
       return { points: POINTS.exact_score, reason: "exact_score" };
     }
+
     const predictedWinner = getWinner(
       prediction.homeScore!,
       prediction.awayScore!
     );
+
     if (predictedWinner === actualWinner) {
-      return {
-        points: POINTS.correct_winner_with_goals,
-        reason: "correct_winner_with_goals",
-      };
+      // Correct winner + correct goal difference
+      const actualDiff = match.homeScore - match.awayScore;
+      const predictedDiff = prediction.homeScore! - prediction.awayScore!;
+      if (predictedDiff === actualDiff) {
+        return {
+          points: POINTS.correct_winner_goal_diff,
+          reason: "correct_winner_goal_diff",
+        };
+      }
+      // Correct winner only
+      return { points: POINTS.correct_winner_only, reason: "correct_winner_only" };
     }
+
     return { points: 0, reason: "wrong" };
   }
 
+  // Winner-only prediction
   if (prediction.predictedWinner === actualWinner) {
     return {
       points: POINTS.correct_winner_only,

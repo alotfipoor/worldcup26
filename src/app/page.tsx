@@ -30,7 +30,7 @@ async function getLeaderboardData(currentUserId: string): Promise<LeaderboardUse
   return users
     .map((user) => {
       const exactCount = user.predictions.filter((p) => p.reason === "exact_score").length;
-      const winnerGoalsCount = user.predictions.filter((p) => p.reason === "correct_winner_with_goals").length;
+      const winnerGoalsCount = user.predictions.filter((p) => p.reason === "correct_winner_goal_diff").length;
       const winnerOnlyCount = user.predictions.filter((p) => p.reason === "correct_winner_only").length;
       const matchPoints = user.predictions.reduce((sum, p) => sum + (p.points ?? 0), 0);
 

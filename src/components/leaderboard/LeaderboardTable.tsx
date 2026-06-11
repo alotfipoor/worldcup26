@@ -147,7 +147,7 @@ export default function LeaderboardTable({
           <span className="text-green-700 font-medium">6pt</span> = exact score
         </span>
         <span>
-          <span className="text-blue-700 font-medium">4pt</span> = right winner + goals
+          <span className="text-blue-700 font-medium">4pt</span> = right winner + goal diff
         </span>
         <span>
           <span className="text-yellow-700 font-medium">2pt</span> = winner only
