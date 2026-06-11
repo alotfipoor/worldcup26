@@ -36,10 +36,10 @@ export default function PredictionForm({
       : "score"
   );
   const [homeScore, setHomeScore] = useState(
-    initialPrediction?.homeScore?.toString() ?? ""
+    initialPrediction?.homeScore?.toString() ?? "0"
   );
   const [awayScore, setAwayScore] = useState(
-    initialPrediction?.awayScore?.toString() ?? ""
+    initialPrediction?.awayScore?.toString() ?? "0"
   );
   const [winner, setWinner] = useState<WinnerOption | null>(
     (initialPrediction?.predictedWinner as WinnerOption) ?? null
@@ -55,7 +55,7 @@ export default function PredictionForm({
     } else if (initialPrediction?.homeScore !== null && initialPrediction?.homeScore !== undefined) {
       setMode("score");
       setHomeScore(initialPrediction.homeScore.toString());
-      setAwayScore(initialPrediction.awayScore?.toString() ?? "");
+      setAwayScore(initialPrediction.awayScore?.toString() ?? "0");
     }
   }, [initialPrediction]);
 
@@ -106,7 +106,7 @@ export default function PredictionForm({
 
   const canSave =
     mode === "score"
-      ? homeScore !== "" && awayScore !== ""
+      ? homeScore !== "" && awayScore !== "" && !isNaN(parseInt(homeScore)) && !isNaN(parseInt(awayScore))
       : winner !== null;
 
   return (
