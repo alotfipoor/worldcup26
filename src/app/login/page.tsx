@@ -70,9 +70,9 @@ export default function LoginPage() {
       {/* Logo / Header */}
       <div className="text-center mb-10">
         <div className="text-5xl mb-3">⚽</div>
-        <h1 className="text-2xl font-bold">WC26 Predictions</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          World Cup 2026 · Private game
+        <h1 className="text-3xl font-bold tracking-tight">KickPick</h1>
+        <p className="text-sm text-muted-foreground mt-1.5">
+          Pick your result before the kick-off.
         </p>
       </div>
 

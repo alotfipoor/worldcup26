@@ -42,8 +42,8 @@ export default function Sidebar({ isAdmin, userName, userId }: SidebarProps) {
       <Link href="/" className="flex items-center gap-2.5 px-3 mb-8">
         <span className="text-2xl">⚽</span>
         <div>
-          <div className="font-bold text-sm leading-tight">WC26</div>
-          <div className="text-[10px] text-muted-foreground leading-tight">Predictions</div>
+          <div className="font-bold text-sm leading-tight">KickPick</div>
+          <div className="text-[10px] text-muted-foreground leading-tight">WC26 Predictions</div>
         </div>
       </Link>
 

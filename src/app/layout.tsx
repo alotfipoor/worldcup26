@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WC26 Predictions",
-  description: "World Cup 2026 prediction game",
+  title: "KickPick",
+  description: "Pick your result before the kick-off.",
 };
 
 export const viewport: Viewport = {

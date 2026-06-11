@@ -3,25 +3,29 @@ import { getSession } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import PredictionForm from "@/components/matches/PredictionForm";
-import { STAGE_LABELS } from "@/lib/constants";
+import { STAGE_LABELS, TEAM_TO_FLAG_CODE, formatGroupName } from "@/lib/constants";
 import { getLockTime } from "@/lib/scoring";
-import { TEAM_TO_FLAG_CODE } from "@/lib/constants";
 import { Lock } from "lucide-react";
+import * as CountryFlags from "country-flag-icons/react/3x2";
 
-export const revalidate = 30;
+type FlagKey = keyof typeof CountryFlags;
 
 function Flag({ team }: { team: string }) {
-  const code = TEAM_TO_FLAG_CODE[team];
-  if (!code) return null;
+  const code = TEAM_TO_FLAG_CODE[team] as FlagKey | undefined;
+  const FlagComponent = code
+    ? (CountryFlags[code] as React.ComponentType<{ className?: string }> | undefined)
+    : undefined;
+
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`https://flagcdn.com/48x34/${code.toLowerCase().replace("gb-eng", "gb")}.png`}
-      width={48}
-      height={34}
-      alt={team}
-      className="rounded object-cover"
-    />
+    <span className="w-14 h-10 rounded-lg overflow-hidden shadow inline-block flex-shrink-0">
+      {FlagComponent ? (
+        <FlagComponent className="w-full h-full" />
+      ) : (
+        <span className="w-full h-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+          {team.slice(0, 3).toUpperCase()}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -34,6 +38,8 @@ function formatMatchDate(kickoff: Date) {
     minute: "2-digit",
   }).format(new Date(kickoff));
 }
+
+export const revalidate = 30;
 
 export default async function MatchDetailPage({
   params,
@@ -57,14 +63,17 @@ export default async function MatchDetailPage({
   const isLive = match.status === "LIVE";
   const isKnockout = match.stage !== "GROUP";
 
+  const stageLabel = STAGE_LABELS[match.stage] ?? match.stage;
+  const groupLabel = formatGroupName(match.groupName);
+  const label = groupLabel ? `${stageLabel} · ${groupLabel}` : stageLabel;
+
   return (
     <PageWrapper>
       <div className="space-y-6">
         {/* Match header */}
         <div className="text-center space-y-1">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            {STAGE_LABELS[match.stage] ?? match.stage}
-            {match.groupName ? ` · ${match.groupName}` : ""}
+            {label}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatMatchDate(new Date(match.kickoff))}

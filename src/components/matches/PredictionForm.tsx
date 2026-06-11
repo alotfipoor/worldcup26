@@ -219,7 +219,7 @@ export default function PredictionForm({
       </Button>
 
       <p className="text-[10px] text-muted-foreground text-center">
-        Exact score: 6pts · Right winner + goal diff: 4pts · Right winner: 2pts
+        Exact score: 6pts · Right winner + goal diff: 4pts · Right winner: 2pts · Can update until kickoff
       </p>
     </div>
   );

@@ -101,10 +101,9 @@ export function calculateTournamentPoints(
 }
 
 export function isPredictionLocked(kickoff: Date): boolean {
-  const lockTime = new Date(kickoff.getTime() - 24 * 60 * 60 * 1000);
-  return new Date() >= lockTime;
+  return new Date() >= new Date(kickoff);
 }
 
 export function getLockTime(kickoff: Date): Date {
-  return new Date(kickoff.getTime() - 24 * 60 * 60 * 1000);
+  return new Date(kickoff);
 }

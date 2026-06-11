@@ -107,11 +107,9 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold">
-              ⚽ WC26 Predictions
-            </h1>
+            <h1 className="text-xl font-bold tracking-tight">⚽ KickPick</h1>
             <p className="text-xs text-muted-foreground">
-              Welcome, {session.user.name}
+              Pick your result before the kick-off.
             </p>
           </div>
           <Link

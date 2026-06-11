@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Trophy, Target, Zap, Lock, EyeOff, BookOpen } from "lucide-react";
 
-export const metadata = { title: "Scoring Rules — WC26 Predictions" };
+export const metadata = { title: "Scoring Rules — KickPick" };
 
 function RuleCard({
   icon: Icon,
@@ -160,7 +160,7 @@ export default async function RulesPage() {
         {/* Lock rule */}
         <RuleCard icon={Lock} title="Prediction Deadline">
           <p className="text-xs text-muted-foreground">
-            Match predictions lock <span className="font-medium text-foreground">24 hours before kickoff</span> — not at kickoff. Make sure to submit before the window closes.
+            Match predictions lock <span className="font-medium text-foreground">at kickoff</span>. You can predict or update your pick at any time right up until the match starts — including knockout matches once the teams are known.
           </p>
           <p className="text-xs text-muted-foreground">
             The countdown timer on each match card shows exactly how long you
