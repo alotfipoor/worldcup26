@@ -4,6 +4,31 @@ import {
   mapApiStage,
   mapApiStatus,
 } from "./football-api";
+
+/**
+ * Trigger a sync in the background if data is stale (>3 min since last sync
+ * and there are live or recently-started matches). Fire-and-forget — never
+ * awaited, never throws into the caller.
+ */
+export function maybeTriggerBackgroundSync() {
+  const secret = process.env.SYNC_SECRET;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!secret || !appUrl) return;
+
+  prisma.match
+    .findFirst({ orderBy: { syncedAt: "desc" }, select: { syncedAt: true } })
+    .then((last) => {
+      const staleMs = 3 * 60 * 1000;
+      const age = last?.syncedAt ? Date.now() - last.syncedAt.getTime() : Infinity;
+      if (age < staleMs) return;
+      const base = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
+      fetch(`${base}/api/sync`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${secret}` },
+      }).catch(() => {});
+    })
+    .catch(() => {});
+}
 import { calculateMatchPoints } from "./scoring";
 import type { Stage, MatchStatus } from "@prisma/client";
 

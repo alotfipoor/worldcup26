@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import PageWrapper from "@/components/layout/PageWrapper";
 import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
+import AutoRefresh from "@/components/AutoRefresh";
 import { calculateTournamentPoints } from "@/lib/scoring";
 import type { LeaderboardUser } from "@/types";
 
-export const revalidate = 60;
+export const revalidate = 30;
 
 async function getLeaderboard(): Promise<LeaderboardUser[]> {
   const users = await prisma.user.findMany({
@@ -70,6 +71,7 @@ export default async function LeaderboardPage() {
 
   return (
     <PageWrapper>
+      <AutoRefresh intervalMs={60_000} />
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-bold">Standings</h1>

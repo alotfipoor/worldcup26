@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import PageWrapper from "@/components/layout/PageWrapper";
 import MatchCard from "@/components/matches/MatchCard";
 import MiniLeaderboard from "@/components/leaderboard/MiniLeaderboard";
+import AutoRefresh from "@/components/AutoRefresh";
 import Link from "next/link";
 import { calculateTournamentPoints } from "@/lib/scoring";
+import { maybeTriggerBackgroundSync } from "@/lib/sync";
 import type { LeaderboardUser } from "@/types";
 
 export const revalidate = 30;
@@ -68,6 +70,8 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
+  maybeTriggerBackgroundSync();
+
   const [liveMatches, upcomingMatches, predictions, leaderboard] =
     await Promise.all([
       prisma.match.findMany({
@@ -101,8 +105,11 @@ export default async function DashboardPage() {
     (m) => !m.userPrediction
   ).length;
 
+  const hasLive = liveMatches.length > 0;
+
   return (
     <PageWrapper>
+      <AutoRefresh intervalMs={hasLive ? 30_000 : 60_000} />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -3,30 +3,28 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import MatchCard from "@/components/matches/MatchCard";
+import AutoRefresh from "@/components/AutoRefresh";
 import { STAGE_LABELS, STAGE_ORDER } from "@/lib/constants";
+import { maybeTriggerBackgroundSync } from "@/lib/sync";
 import type { Match, Prediction } from "@prisma/client";
 
-export const revalidate = 60;
+export const revalidate = 30;
 
 function groupByStage(
   matches: (Match & { userPrediction: Prediction | null })[]
 ) {
   const groups: Record<string, (Match & { userPrediction: Prediction | null })[]> = {};
-
   for (const match of matches) {
-    const stage = match.stage;
-    if (!groups[stage]) groups[stage] = [];
-    groups[stage].push(match);
+    if (!groups[match.stage]) groups[match.stage] = [];
+    groups[match.stage].push(match);
   }
-
   return Object.entries(groups)
     .sort(([a], [b]) => (STAGE_ORDER[a] ?? 99) - (STAGE_ORDER[b] ?? 99))
     .map(([stage, stageMatches]) => ({
       stage,
       label: STAGE_LABELS[stage] ?? stage,
       matches: stageMatches.sort(
-        (a, b) =>
-          new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
+        (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
       ),
     }));
 }
@@ -35,30 +33,45 @@ export default async function MatchesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
+  // Fire-and-forget background sync if data is stale
+  maybeTriggerBackgroundSync();
+
   const [matches, predictions] = await Promise.all([
     prisma.match.findMany({ orderBy: { kickoff: "asc" } }),
-    prisma.prediction.findMany({
-      where: { userId: session.userId },
-    }),
+    prisma.prediction.findMany({ where: { userId: session.userId } }),
   ]);
 
   const predMap = new Map(predictions.map((p) => [p.matchId, p]));
-
   const matchesWithPreds = matches.map((m) => ({
     ...m,
     userPrediction: predMap.get(m.id) ?? null,
   }));
 
   const groups = groupByStage(matchesWithPreds);
+  const hasLive = matches.some((m) => m.status === "LIVE");
+  const lastSync = matches.reduce<Date | null>((best, m) => {
+    if (!m.syncedAt) return best;
+    return !best || m.syncedAt > best ? m.syncedAt : best;
+  }, null);
 
   return (
     <PageWrapper>
-      <h1 className="text-xl font-bold mb-4">Matches</h1>
+      {/* Auto-refresh: every 30s during live, 60s otherwise */}
+      <AutoRefresh intervalMs={hasLive ? 30_000 : 60_000} />
+
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Matches</h1>
+        {lastSync && (
+          <span className="text-[11px] text-muted-foreground">
+            Updated {formatAgo(lastSync)}
+          </span>
+        )}
+      </div>
 
       {groups.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-4xl mb-3">📅</p>
-          <p>Matches will appear here once synced</p>
+          <p className="text-sm">Matches will appear here once synced</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -95,4 +108,12 @@ export default async function MatchesPage() {
       )}
     </PageWrapper>
   );
+}
+
+function formatAgo(date: Date): string {
+  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (secs < 60) return "just now";
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  return `${Math.floor(mins / 60)}h ago`;
 }
