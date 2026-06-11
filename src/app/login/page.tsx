@@ -79,7 +79,7 @@ export default async function LoginPage() {
       </div>
 
       <div className="relative w-full max-w-4xl mx-auto">
-        <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12 justify-center">
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 justify-center">
 
           {/* Login form */}
           <div className="w-full max-w-sm mx-auto lg:mx-0 flex-shrink-0">
