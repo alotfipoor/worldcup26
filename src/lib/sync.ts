@@ -12,6 +12,9 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
   let synced = 0;
 
   for (const m of apiMatches) {
+    // Skip placeholder matches where teams aren't determined yet
+    if (!m.homeTeam?.name || !m.awayTeam?.name) continue;
+
     const stage = mapApiStage(m.stage) as Stage;
     const status = mapApiStatus(m.status) as MatchStatus;
     const homeScore = m.score.fullTime.home;

@@ -1,20 +1,65 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import PageWrapper from "@/components/layout/PageWrapper";
 import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
+import { calculateTournamentPoints } from "@/lib/scoring";
 import type { LeaderboardUser } from "@/types";
 
 export const revalidate = 60;
 
 async function getLeaderboard(): Promise<LeaderboardUser[]> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/leaderboard`, {
-    next: { revalidate: 60 },
+  const users = await prisma.user.findMany({
+    where: { role: "USER", activatedAt: { not: null } },
+    include: {
+      predictions: {
+        where: { points: { not: null } },
+        select: { points: true, reason: true },
+      },
+      tournamentPredictions: {
+        select: { champion: true, topScorer: true, window: true },
+      },
+    },
   });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.users ?? [];
+
+  const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
+  const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
+
+  return users
+    .map((user) => {
+      const exactCount = user.predictions.filter((p) => p.reason === "exact_score").length;
+      const winnerGoalsCount = user.predictions.filter((p) => p.reason === "correct_winner_with_goals").length;
+      const winnerOnlyCount = user.predictions.filter((p) => p.reason === "correct_winner_only").length;
+      const matchPoints = user.predictions.reduce((sum, p) => sum + (p.points ?? 0), 0);
+
+      const latestTournament =
+        user.tournamentPredictions.find((t) => t.window === "POST_GROUP") ??
+        user.tournamentPredictions.find((t) => t.window === "INITIAL");
+
+      const tournamentPoints =
+        actualChampion && latestTournament
+          ? calculateTournamentPoints(latestTournament, {
+              champion: actualChampion,
+              topScorer: actualTopScorer,
+            })
+          : 0;
+
+      return {
+        id: user.id,
+        name: user.name ?? "Unknown",
+        rank: 0,
+        exactCount,
+        winnerGoalsCount,
+        winnerOnlyCount,
+        matchPoints,
+        tournamentPoints,
+        totalPoints: matchPoints + tournamentPoints,
+        predictionsSubmitted: user.predictions.length,
+        predictionsScored: user.predictions.filter((p) => p.points !== null).length,
+      };
+    })
+    .sort((a, b) => b.totalPoints - a.totalPoints)
+    .map((u, i) => ({ ...u, rank: i + 1 }));
 }
 
 export default async function LeaderboardPage() {
@@ -32,10 +77,7 @@ export default async function LeaderboardPage() {
             Tap a player to see their predictions
           </p>
         </div>
-        <LeaderboardTable
-          users={users}
-          currentUserId={session.userId}
-        />
+        <LeaderboardTable users={users} currentUserId={session.userId} />
       </div>
     </PageWrapper>
   );
