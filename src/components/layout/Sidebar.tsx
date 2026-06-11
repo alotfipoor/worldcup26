@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Trophy, Star, Settings, LogOut, BookOpen, Sun, Moon } from "lucide-react";
+import { Home, Calendar, Trophy, Star, Zap, Settings, LogOut, BookOpen, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/matches", icon: Calendar, label: "Matches" },
   { href: "/leaderboard", icon: Trophy, label: "Standings" },
   { href: "/tournament", icon: Star, label: "Winner" },
+  { href: "/sidebets", icon: Zap, label: "Side Bets" },
   { href: "/rules", icon: BookOpen, label: "Rules" },
 ];
 

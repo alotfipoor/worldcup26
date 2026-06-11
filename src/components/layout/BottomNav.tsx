@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Trophy, Star, Settings } from "lucide-react";
+import { Home, Calendar, Trophy, Star, Zap, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/matches", icon: Calendar, label: "Matches" },
   { href: "/leaderboard", icon: Trophy, label: "Standings" },
   { href: "/tournament", icon: Star, label: "Winner" },
+  { href: "/sidebets", icon: Zap, label: "Side Bets" },
 ];
 
 interface BottomNavProps {
