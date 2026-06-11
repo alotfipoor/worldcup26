@@ -1,162 +1,156 @@
-"use client";
+import { prisma } from "@/lib/prisma";
+import { calculateTournamentPoints } from "@/lib/scoring";
+import LoginForm from "@/components/auth/LoginForm";
+import { cn } from "@/lib/utils";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { ArrowRight, ChevronLeft } from "lucide-react";
+export const revalidate = 60;
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [step, setStep] = useState<"code" | "name">("code");
-  const [inviteCode, setInviteCode] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
+const MEDALS = ["🥇", "🥈", "🥉"];
 
-  async function handleCodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inviteCode: inviteCode.trim().toUpperCase() }),
+async function getStandings() {
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: "USER", activatedAt: { not: null } },
+      include: {
+        predictions: {
+          where: { points: { not: null } },
+          select: { points: true },
+        },
+        tournamentPredictions: {
+          select: { champion: true, topScorer: true, window: true },
+        },
+      },
     });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) { toast.error(data.error ?? "Invalid invite code"); return; }
-    if (data.status === "setup_required") { setStep("name"); }
-    else { router.push("/"); router.refresh(); }
-  }
 
-  async function handleNameSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    const res = await fetch("/api/auth/setup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inviteCode: inviteCode.trim().toUpperCase(), name: name.trim() }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) { toast.error(data.error ?? "Something went wrong"); return; }
-    router.push("/");
-    router.refresh();
+    const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
+    const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
+
+    return users
+      .map((user) => {
+        const matchPoints = user.predictions.reduce((s, p) => s + (p.points ?? 0), 0);
+        const latest =
+          user.tournamentPredictions.find((t) => t.window === "POST_GROUP") ??
+          user.tournamentPredictions.find((t) => t.window === "INITIAL");
+        const tournamentPoints =
+          actualChampion && latest
+            ? calculateTournamentPoints(latest, { champion: actualChampion, topScorer: actualTopScorer })
+            : 0;
+        return {
+          id: user.id,
+          name: user.name ?? "Unknown",
+          totalPoints: matchPoints + tournamentPoints,
+          scored: user.predictions.length,
+        };
+      })
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .map((u, i) => ({ ...u, rank: i + 1 }));
+  } catch {
+    return [];
   }
+}
+
+function UserInitials({ name }: { name: string }) {
+  const colors = [
+    "bg-red-500/15 text-red-600 dark:text-red-400",
+    "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+    "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    "bg-purple-500/15 text-purple-600 dark:text-purple-400",
+    "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+    "bg-pink-500/15 text-pink-600 dark:text-pink-400",
+  ];
+  const idx = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
+  const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  return (
+    <span className={cn("w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0", colors[idx])}>
+      {initials}
+    </span>
+  );
+}
+
+export default async function LoginPage() {
+  const standings = await getStandings();
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background px-4 py-10">
       {/* Background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]" />
         <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-primary/8 blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full bg-primary/5 blur-[80px]" />
       </div>
 
-      <div className="relative w-full max-w-sm mx-auto px-6">
-        {/* Logo card */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4 text-3xl shadow-lg">
-            ⚽
+      <div className="relative w-full max-w-4xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12 justify-center">
+
+          {/* Login form */}
+          <div className="w-full max-w-sm mx-auto lg:mx-0 flex-shrink-0">
+            <LoginForm />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">KickPick</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">
-            Pick your result before the kick-off.
-          </p>
-        </div>
 
-        {/* Form card */}
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-xl shadow-black/5 dark:shadow-black/30">
-          {step === "code" ? (
-            <form onSubmit={handleCodeSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Invite Code
-                </p>
-                <Input
-                  type="text"
-                  placeholder="XXXXXX"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  maxLength={6}
-                  className="text-center text-2xl font-mono tracking-[0.4em] uppercase h-14 bg-muted/50 border-border focus:border-primary"
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                  autoFocus
-                />
-                <p className="text-xs text-muted-foreground text-center pt-0.5">
-                  Enter the code you received to join
-                </p>
+          {/* Standings */}
+          {standings.length > 0 && (
+            <div className="w-full max-w-sm mx-auto lg:mx-0 lg:flex-1 lg:max-w-none">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-black/5 dark:shadow-black/30">
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                  <span className="text-lg">🏆</span>
+                  <div>
+                    <h2 className="font-bold text-sm">Standings</h2>
+                    <p className="text-xs text-muted-foreground">Live leaderboard</p>
+                  </div>
+                </div>
+
+                {/* Table rows */}
+                <div className="divide-y divide-border">
+                  {standings.map((player) => (
+                    <div
+                      key={player.id}
+                      className={cn(
+                        "flex items-center gap-3 px-5 py-3 transition-colors",
+                        player.rank === 1 && "bg-amber-500/5"
+                      )}
+                    >
+                      {/* Rank */}
+                      <span className="w-6 text-center text-sm font-bold flex-shrink-0">
+                        {player.rank <= 3
+                          ? MEDALS[player.rank - 1]
+                          : <span className="text-muted-foreground text-xs">{player.rank}</span>
+                        }
+                      </span>
+
+                      {/* Avatar + name */}
+                      <UserInitials name={player.name} />
+                      <span className={cn(
+                        "flex-1 text-sm font-semibold truncate",
+                        player.rank === 1 && "text-amber-600 dark:text-amber-400"
+                      )}>
+                        {player.name}
+                      </span>
+
+                      {/* Points */}
+                      <div className="text-right flex-shrink-0">
+                        <span className={cn(
+                          "text-sm font-bold tabular-nums",
+                          player.rank === 1 && "text-amber-600 dark:text-amber-400"
+                        )}>
+                          {player.totalPoints}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground ml-0.5">pt</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div className="px-5 py-3 border-t border-border">
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Log in to see full breakdown &amp; make predictions
+                  </p>
+                </div>
               </div>
-              <Button
-                type="submit"
-                className="w-full h-12 text-sm font-semibold rounded-xl"
-                disabled={loading || inviteCode.length < 4}
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Checking…
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                )}
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleNameSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Your Name
-                </p>
-                <Input
-                  type="text"
-                  placeholder="How should we call you?"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={30}
-                  className="h-12 text-base bg-muted/50 border-border focus:border-primary"
-                  autoFocus
-                />
-                <p className="text-xs text-muted-foreground pt-0.5">
-                  This is how you&apos;ll appear on the leaderboard
-                </p>
-              </div>
-              <Button
-                type="submit"
-                className="w-full h-12 text-sm font-semibold rounded-xl"
-                disabled={loading || name.trim().length < 2}
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Joining…
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    Join the game
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                )}
-              </Button>
-              <button
-                type="button"
-                onClick={() => setStep("code")}
-                className="w-full flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Back
-              </button>
-            </form>
+            </div>
           )}
-        </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Private game · Invite only
-        </p>
+        </div>
       </div>
     </div>
   );
