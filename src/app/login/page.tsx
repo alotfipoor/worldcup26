@@ -10,7 +10,7 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 async function getStandings() {
   try {
     const users = await prisma.user.findMany({
-      where: { role: "USER", activatedAt: { not: null } },
+      where: { activatedAt: { not: null } },
       include: {
         predictions: {
           where: { points: { not: null } },
@@ -86,38 +86,38 @@ export default async function LoginPage() {
             <LoginForm />
           </div>
 
-          {/* Standings */}
-          {standings.length > 0 && (
-            <div className="w-full max-w-sm mx-auto lg:mx-0 lg:flex-1 lg:max-w-none">
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-black/5 dark:shadow-black/30">
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                  <span className="text-lg">🏆</span>
-                  <div>
-                    <h2 className="font-bold text-sm">Standings</h2>
-                    <p className="text-xs text-muted-foreground">Live leaderboard</p>
-                  </div>
+          {/* Standings — always shown */}
+          <div className="w-full max-w-sm mx-auto lg:mx-0 lg:flex-1 lg:max-w-none">
+            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-black/5 dark:shadow-black/30">
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                <span className="text-lg">🏆</span>
+                <div>
+                  <h2 className="font-bold text-sm">Standings</h2>
+                  <p className="text-xs text-muted-foreground">Live leaderboard</p>
                 </div>
+              </div>
 
-                {/* Table rows */}
+              {standings.length === 0 ? (
+                <div className="px-5 py-8 text-center text-muted-foreground text-sm">
+                  No scores yet — game just started!
+                </div>
+              ) : (
                 <div className="divide-y divide-border">
                   {standings.map((player) => (
                     <div
                       key={player.id}
                       className={cn(
-                        "flex items-center gap-3 px-5 py-3 transition-colors",
+                        "flex items-center gap-3 px-5 py-3",
                         player.rank === 1 && "bg-amber-500/5"
                       )}
                     >
-                      {/* Rank */}
                       <span className="w-6 text-center text-sm font-bold flex-shrink-0">
                         {player.rank <= 3
                           ? MEDALS[player.rank - 1]
                           : <span className="text-muted-foreground text-xs">{player.rank}</span>
                         }
                       </span>
-
-                      {/* Avatar + name */}
                       <UserInitials name={player.name} />
                       <span className={cn(
                         "flex-1 text-sm font-semibold truncate",
@@ -125,8 +125,6 @@ export default async function LoginPage() {
                       )}>
                         {player.name}
                       </span>
-
-                      {/* Points */}
                       <div className="text-right flex-shrink-0">
                         <span className={cn(
                           "text-sm font-bold tabular-nums",
@@ -139,16 +137,15 @@ export default async function LoginPage() {
                     </div>
                   ))}
                 </div>
+              )}
 
-                {/* Footer */}
-                <div className="px-5 py-3 border-t border-border">
-                  <p className="text-[11px] text-muted-foreground text-center">
-                    Log in to see full breakdown &amp; make predictions
-                  </p>
-                </div>
+              <div className="px-5 py-3 border-t border-border">
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Log in to see full breakdown &amp; make predictions
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
         </div>
       </div>
