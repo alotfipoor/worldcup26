@@ -138,15 +138,10 @@ export default async function DashboardPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">⚽ KickPick</h1>
-            <p className="text-xs text-muted-foreground">
-              Pick your result before the kick-off.
-            </p>
-          </div>
+          <h1 className="text-base font-semibold tracking-tight">Hey, {session.user.name ?? "there"} 👋</h1>
           <Link
             href={`/players/${session.userId}`}
-            className="text-xs text-primary"
+            className="text-xs text-primary font-medium"
           >
             My stats →
           </Link>

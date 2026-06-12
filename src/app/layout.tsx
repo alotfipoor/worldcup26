@@ -48,7 +48,7 @@ export default async function RootLayout({
           {isLoggedIn ? (
             <div className="flex h-full">
               {/* Desktop sidebar */}
-              <aside className="hidden md:flex md:w-52 lg:w-60 flex-col flex-shrink-0 border-r border-sidebar-border bg-sidebar sticky top-0 h-screen overflow-y-auto">
+              <aside className="hidden md:flex md:w-52 lg:w-60 flex-col flex-shrink-0 border-r border-sidebar-border bg-sidebar sticky top-0 h-screen">
                 <Sidebar
                   isAdmin={session.user.role === "ADMIN"}
                   userName={session.user.name}
@@ -70,7 +70,11 @@ export default async function RootLayout({
           )}
 
           {isLoggedIn && (
-            <BottomNav isAdmin={session.user.role === "ADMIN"} />
+            <BottomNav
+              isAdmin={session.user.role === "ADMIN"}
+              userName={session.user.name}
+              userId={session.userId}
+            />
           )}
 
           <Toaster position="top-center" richColors />
