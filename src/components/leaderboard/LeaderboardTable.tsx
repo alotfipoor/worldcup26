@@ -67,14 +67,14 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
   return (
     <div className="space-y-1.5">
       {/* Header */}
-      <div className="grid grid-cols-[2rem_1fr_3.5rem] sm:grid-cols-[2rem_1fr_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_3.5rem] gap-1 px-3 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="grid grid-cols-[2rem_1fr_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_3.5rem] gap-1 px-3 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         <span className="text-center">#</span>
         <span>Player</span>
-        <span className="hidden sm:block text-center text-emerald-600 dark:text-emerald-400">6</span>
-        <span className="hidden sm:block text-center text-blue-600 dark:text-blue-400">4</span>
-        <span className="hidden sm:block text-center text-amber-600 dark:text-amber-400">2</span>
-        <span className="hidden sm:block text-center text-purple-600 dark:text-purple-400">🏆</span>
-        <span className="hidden sm:block text-center text-orange-500 dark:text-orange-400">🎲</span>
+        <span className="text-center text-emerald-600 dark:text-emerald-400">6</span>
+        <span className="text-center text-blue-600 dark:text-blue-400">4</span>
+        <span className="text-center text-amber-600 dark:text-amber-400">2</span>
+        <span className="text-center text-purple-600 dark:text-purple-400">🏆</span>
+        <span className="text-center text-orange-500 dark:text-orange-400">🎲</span>
         <span className="text-right">Total</span>
       </div>
 
@@ -87,7 +87,7 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
             key={user.id}
             href={`/players/${user.id}`}
             className={cn(
-              "grid grid-cols-[2rem_1fr_3.5rem] sm:grid-cols-[2rem_1fr_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_3.5rem] gap-1 items-center px-3 py-3 rounded-2xl border transition-all duration-150",
+              "grid grid-cols-[2rem_1fr_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_3.5rem] gap-1 items-center px-3 py-3 rounded-2xl border transition-all duration-150",
               isMe
                 ? "bg-primary/10 border-primary/30 hover:border-primary/50"
                 : isFirst
@@ -104,7 +104,7 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
 
             {/* Name */}
             <div className="flex items-center gap-2 min-w-0">
-              <UserAvatar name={user.name} />
+              <span className="hidden sm:contents"><UserAvatar name={user.name} /></span>
               <div className="min-w-0">
                 <span className={cn(
                   "text-sm font-semibold truncate block leading-tight",
@@ -122,27 +122,27 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
             </div>
 
             {/* Exact */}
-            <span className="hidden sm:block text-xs text-center tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs text-center tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
               {user.exactCount > 0 ? user.exactCount : <span className="text-muted-foreground/40">–</span>}
             </span>
 
             {/* Winner+Diff */}
-            <span className="hidden sm:block text-xs text-center tabular-nums font-semibold text-blue-600 dark:text-blue-400">
+            <span className="text-xs text-center tabular-nums font-semibold text-blue-600 dark:text-blue-400">
               {user.winnerGoalsCount > 0 ? user.winnerGoalsCount : <span className="text-muted-foreground/40">–</span>}
             </span>
 
             {/* Winner Only */}
-            <span className="hidden sm:block text-xs text-center tabular-nums font-semibold text-amber-600 dark:text-amber-400">
+            <span className="text-xs text-center tabular-nums font-semibold text-amber-600 dark:text-amber-400">
               {user.winnerOnlyCount > 0 ? user.winnerOnlyCount : <span className="text-muted-foreground/40">–</span>}
             </span>
 
             {/* Tournament */}
-            <span className="hidden sm:block text-xs text-center tabular-nums font-semibold text-purple-600 dark:text-purple-400">
+            <span className="text-xs text-center tabular-nums font-semibold text-purple-600 dark:text-purple-400">
               {user.tournamentPoints > 0 ? user.tournamentPoints : <span className="text-muted-foreground/40">–</span>}
             </span>
 
             {/* Side bets */}
-            <span className="hidden sm:block text-xs text-center tabular-nums font-semibold text-orange-500 dark:text-orange-400">
+            <span className="text-xs text-center tabular-nums font-semibold text-orange-500 dark:text-orange-400">
               {user.sideBetPoints > 0 ? user.sideBetPoints : <span className="text-muted-foreground/40">–</span>}
             </span>
 
