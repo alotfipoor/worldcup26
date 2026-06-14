@@ -113,6 +113,7 @@ model TournamentPrediction {
   userId    String
   champion  String?
   topScorer String?
+  topAssist String?
   window    PredictionWindow @default(INITIAL)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt

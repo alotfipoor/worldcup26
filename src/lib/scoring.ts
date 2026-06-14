@@ -16,6 +16,7 @@ export const POINTS = {
   wrong: 0,
   tournament_champion: 15,
   tournament_top_scorer: 15,
+  tournament_top_assist: 10,
 } as const;
 
 function getWinner(
@@ -81,8 +82,8 @@ export function calculateMatchPoints(
 }
 
 export function calculateTournamentPoints(
-  prediction: { champion: string | null; topScorer: string | null },
-  actual: { champion: string; topScorer: string }
+  prediction: { champion: string | null; topScorer: string | null; topAssist: string | null },
+  actual: { champion: string; topScorer: string; topAssist: string }
 ): number {
   let points = 0;
   if (
@@ -96,6 +97,12 @@ export function calculateTournamentPoints(
     prediction.topScorer.toLowerCase() === actual.topScorer.toLowerCase()
   ) {
     points += POINTS.tournament_top_scorer;
+  }
+  if (
+    prediction.topAssist &&
+    prediction.topAssist.toLowerCase() === actual.topAssist.toLowerCase()
+  ) {
+    points += POINTS.tournament_top_assist;
   }
   return points;
 }

@@ -25,7 +25,7 @@ async function getLeaderboardData(currentUserId: string): Promise<LeaderboardUse
         },
       },
       tournamentPredictions: {
-        select: { champion: true, topScorer: true, window: true },
+        select: { champion: true, topScorer: true, topAssist: true, window: true },
       },
       sideBetPredictions: {
         where: { pointsAwarded: { not: null } },
@@ -36,6 +36,7 @@ async function getLeaderboardData(currentUserId: string): Promise<LeaderboardUse
 
   const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
   const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
+  const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
 
   return users
     .map((user) => {
@@ -63,6 +64,7 @@ async function getLeaderboardData(currentUserId: string): Promise<LeaderboardUse
           ? calculateTournamentPoints(latestTournament, {
               champion: actualChampion,
               topScorer: actualTopScorer,
+              topAssist: actualTopAssist,
             })
           : 0;
 

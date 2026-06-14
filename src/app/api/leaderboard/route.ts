@@ -22,7 +22,7 @@ export async function GET() {
         },
       },
       tournamentPredictions: {
-        select: { champion: true, topScorer: true, window: true },
+        select: { champion: true, topScorer: true, topAssist: true, window: true },
       },
       sideBetPredictions: {
         where: { pointsAwarded: { not: null } },
@@ -33,6 +33,7 @@ export async function GET() {
 
   const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
   const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
+  const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
 
   const ranked: LeaderboardUser[] = users
     .map((user) => {
@@ -69,6 +70,7 @@ export async function GET() {
           ? calculateTournamentPoints(latestTournament, {
               champion: actualChampion,
               topScorer: actualTopScorer,
+              topAssist: actualTopAssist,
             })
           : 0;
 

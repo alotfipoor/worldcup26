@@ -92,6 +92,7 @@ export default async function ComparePage({
 
   const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
   const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
+  const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
 
   function getTournamentPoints(
     player: NonNullable<typeof playerA>
@@ -103,6 +104,7 @@ export default async function ComparePage({
     return calculateTournamentPoints(latest, {
       champion: actualChampion,
       topScorer: actualTopScorer,
+      topAssist: actualTopAssist,
     });
   }
 

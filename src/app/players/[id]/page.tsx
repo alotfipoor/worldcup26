@@ -107,9 +107,13 @@ export default async function PlayerPage({
                 <span className="text-muted-foreground">Champion</span>
                 <span className="font-semibold">{latestTournament.champion ?? "–"}</span>
               </div>
-              <div className="flex items-center justify-between text-sm py-1.5">
+              <div className="flex items-center justify-between text-sm py-1.5 border-b border-border">
                 <span className="text-muted-foreground">Top scorer</span>
                 <span className="font-semibold">{latestTournament.topScorer ?? "–"}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm py-1.5">
+                <span className="text-muted-foreground">Top assists</span>
+                <span className="font-semibold">{latestTournament.topAssist ?? "–"}</span>
               </div>
             </div>
           </div>

@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { WC2026_TEAMS, TEAM_TO_FLAG_CODE } from "@/lib/constants";
+import { WC2026_TEAMS, TEAM_TO_FLAG_CODE, WC2026_PLAYERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import PlayerAutocomplete from "@/components/ui/player-autocomplete";
 import type { TournamentPrediction } from "@prisma/client";
 import * as CountryFlags from "country-flag-icons/react/3x2";
 
@@ -76,6 +77,7 @@ export default function TournamentForm({
 
   const [champion, setChampion] = useState(activePrediction?.champion ?? "");
   const [topScorer, setTopScorer] = useState(activePrediction?.topScorer ?? "");
+  const [topAssist, setTopAssist] = useState(activePrediction?.topAssist ?? "");
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -89,7 +91,7 @@ export default function TournamentForm({
     const res = await fetch("/api/tournament", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ champion, topScorer }),
+      body: JSON.stringify({ champion, topScorer, topAssist }),
     });
     setSaving(false);
 
@@ -126,6 +128,13 @@ export default function TournamentForm({
             )}
           </span>
         </Section>
+        <Section title="Top Assists">
+          <span className="text-sm font-medium">
+            {activePrediction?.topAssist || (
+              <span className="text-muted-foreground">No prediction made</span>
+            )}
+          </span>
+        </Section>
       </div>
     );
   }
@@ -140,6 +149,7 @@ export default function TournamentForm({
           </p>
           <p>Champion: {initialPrediction.champion ?? "–"}</p>
           <p>Top scorer: {initialPrediction.topScorer ?? "–"}</p>
+          <p>Top assists: {initialPrediction.topAssist ?? "–"}</p>
         </div>
       )}
 
@@ -173,17 +183,31 @@ export default function TournamentForm({
         </div>
       </div>
 
-      {/* Top scorer */}
+      {/* Golden Boot */}
       <div className="space-y-2">
         <Label htmlFor="topScorer" className="text-base font-semibold">
           Golden Boot (Top Scorer)
         </Label>
-        <Input
+        <PlayerAutocomplete
           id="topScorer"
           value={topScorer}
-          onChange={(e) => setTopScorer(e.target.value)}
+          onChange={setTopScorer}
+          players={WC2026_PLAYERS}
           placeholder="Player name…"
-          className="h-11"
+        />
+      </div>
+
+      {/* Top Assists */}
+      <div className="space-y-2">
+        <Label htmlFor="topAssist" className="text-base font-semibold">
+          Top Assists
+        </Label>
+        <PlayerAutocomplete
+          id="topAssist"
+          value={topAssist}
+          onChange={setTopAssist}
+          players={WC2026_PLAYERS}
+          placeholder="Player name…"
         />
       </div>
 
@@ -196,7 +220,7 @@ export default function TournamentForm({
       </Button>
 
       <p className="text-[10px] text-muted-foreground text-center">
-        15 pts for correct champion · 15 pts for correct top scorer
+        15 pts for correct champion · 15 pts for correct top scorer · 10 pts for correct top assists
         {window === "INITIAL"
           ? " · Can update after group stage"
           : " · Locks when knockouts begin"}

@@ -184,3 +184,245 @@ export function formatGroupName(group: string | null | undefined): string {
   // "GROUP_A" → "Group A", "GROUP_B" → "Group B"
   return group.replace(/^GROUP_/, "Group ").replace(/_/g, " ");
 }
+
+export const WC2026_PLAYERS: string[] = [
+  // Argentina
+  "Alexis Mac Allister", "Ángel Di María", "Cristian Romero", "Emiliano Martínez",
+  "Enzo Fernández", "Germán Pezzella", "Guido Rodríguez", "Julián Álvarez",
+  "Lautaro Martínez", "Leandro Paredes", "Lionel Messi", "Lisandro Martínez",
+  "Nahuel Molina", "Nicolás González", "Nicolás Tagliafico", "Paulo Dybala",
+  "Rodrigo De Paul", "Thiago Almada", "Valentín Carboni",
+  // Australia
+  "Aaron Mooy", "Adam Taggart", "Ajdin Hrustic", "Harry Souttar",
+  "Jackson Irvine", "Kusini Yengi", "Marco Tilio", "Martin Boyle",
+  "Mathew Leckie", "Mathew Ryan", "Miloš Degenek", "Mitchell Duke",
+  "Nathaniel Atkinson", "Riley McGree", "Tom Rogic",
+  // Belgium
+  "Amadou Onana", "Arthur Theate", "Charles De Ketelaere", "Kevin De Bruyne",
+  "Leandro Trossard", "Loïs Openda", "Nicolas Raskin", "Simon Mignolet",
+  "Thibaut Courtois", "Thomas Meunier", "Timothy Castagne", "Wout Faes",
+  "Yannick Carrasco", "Youri Tielemans", "Zeno Debast",
+  // Bolivia
+  "Boris Céspedes", "Carlos Lampe", "Fernando Saucedo", "Marcelo Moreno Martins",
+  "Ramiro Vaca", "Rodrigo Ramallo",
+  // Brazil
+  "Alisson Becker", "Antony", "Bruno Guimarães", "Casemiro",
+  "Douglas Luiz", "Éder Militão", "Ederson", "Endrick",
+  "Gabriel Magalhães", "Gabriel Martinelli", "Gerson", "João Gomes",
+  "Lucas Paquetá", "Marquinhos", "Pedro", "Raphinha",
+  "Richarlison", "Rodrygo", "Savinho", "Vinicius Junior",
+  "Wendell",
+  // Cameroon
+  "André-Frank Zambo Anguissa", "André Onana", "Bryan Mbeumo",
+  "Collins Fai", "Devis Epassy", "Eric Maxim Choupo-Moting",
+  "Jean-Charles Castelletto", "Karl Toko Ekambi", "Martin Hongla",
+  "Moumi Ngamaleu", "Samuel Oum Gouet", "Vincent Aboubakar",
+  // Canada
+  "Alphonso Davies", "Alistair Johnston", "Cyle Larin", "Derek Cornelius",
+  "Ismaël Koné", "Jonathan David", "Jonathan Osorio", "Kamal Miller",
+  "Lucas Cavallini", "Mark-Anthony Kaye", "Maxime Crépeau", "Milan Borjan",
+  "Richie Laryea", "Stephen Eustáquio", "Tajon Buchanan",
+  // Chile
+  "Alexis Sánchez", "Arturo Vidal", "Ben Brereton Díaz", "Charles Aránguiz",
+  "Darío Osorio", "Diego Valdés", "Eduardo Vargas", "Erick Pulgar",
+  "Gary Medel", "Marcelo Allende", "Víctor Dávila",
+  // Colombia
+  "Carlos Cuesta", "Cucho Hernández", "Dávinson Sánchez", "James Rodríguez",
+  "Jhon Arias", "Jhon Córdoba", "Juan Quintero", "Luis Díaz",
+  "Mateus Uribe", "Miguel Ángel Borja", "Rafael Santos Borré",
+  "Richard Ríos", "Wilmar Barrios", "Yerry Mina",
+  // Costa Rica
+  "Anthony Contreras", "Bryan Oviedo", "Celso Borges", "Francisco Calvo",
+  "Joel Campbell", "Kendall Waston", "Keylor Navas", "Yeltsin Tejeda",
+  // Croatia
+  "Andrej Kramarić", "Ante Budimir", "Borna Sosa", "Bruno Petković",
+  "Dejan Lovren", "Dominik Livaković", "Duje Ćaleta-Car", "Ivan Perišić",
+  "Joško Gvardiol", "Josip Gvardiol", "Lovro Majer", "Luka Ivanušec",
+  "Luka Modrić", "Marcelo Brozović", "Martin Erlić", "Mateo Kovačić",
+  // Ecuador
+  "Ángel Mena", "Ángelo Preciado", "Carlos Gruezo", "Djorkaeff Reasco",
+  "Enner Valencia", "Gonzalo Plata", "Hernán Galíndez", "Jackson Porozo",
+  "Jeremy Sarmiento", "John Yeboah", "Michael Estrada", "Moisés Caicedo",
+  "Pervis Estupiñán", "Piero Hincapié", "Robert Arboleda", "Romario Ibarra",
+  // Egypt
+  "Ahmed Hegazi", "Amr El Sulaya", "Mohamed El-Shenawy", "Mohamed Elneny",
+  "Mohamed Salah", "Mostafa Mohamed", "Omar Marmoush", "Tarek Hamed",
+  // England
+  "Aaron Ramsdale", "Bukayo Saka", "Cole Palmer", "Declan Rice",
+  "Eberechi Eze", "Ezri Konsa", "Harry Kane", "Harry Maguire",
+  "Jack Grealish", "John Stones", "Jordan Pickford", "Jude Bellingham",
+  "Kieran Trippier", "Kobbie Mainoo", "Kyle Walker", "Levi Colwill",
+  "Luke Shaw", "Marc Guéhi", "Marcus Rashford", "Nick Pope",
+  "Ollie Watkins", "Phil Foden", "Raheem Sterling", "Reece James",
+  "Trent Alexander-Arnold",
+  // France
+  "Adrien Rabiot", "Alphonse Areola", "Antoine Griezmann", "Aurélien Tchouaméni",
+  "Benjamin Pavard", "Bradley Barcola", "Christopher Nkunku", "Dayot Upamecano",
+  "Eduardo Camavinga", "Jules Koundé", "Kingsley Coman", "Kylian Mbappé",
+  "Marcus Thuram", "Mike Maignan", "Ousmane Dembélé", "Randal Kolo Muani",
+  "Théo Hernández", "Warren Zaïre-Emery", "William Saliba", "Youssouf Fofana",
+  // Germany
+  "Antonio Rüdiger", "Benjamin Henrichs", "Chris Führich", "David Raum",
+  "Florian Wirtz", "İlkay Gündoğan", "Jamal Musiala", "Joshua Kimmich",
+  "Kai Havertz", "Leroy Sané", "Manuel Neuer", "Marc-André ter Stegen",
+  "Maximilian Mittelstädt", "Niclas Füllkrug", "Niklas Süle", "Pascal Groß",
+  "Robert Andrich", "Serge Gnabry", "Thilo Kehrer",
+  // Ghana
+  "Alexander Djiku", "André Ayew", "Antoine Semenyo", "Baba Rahman",
+  "Daniel Amartey", "Denis Odoi", "Elisha Owusu", "Iñaki Williams",
+  "Jordan Ayew", "Joseph Wollacott", "Mohammed Kudus", "Osman Bukari",
+  "Tariq Lamptey", "Thomas Partey",
+  // Honduras
+  "Alberth Elis", "Bryan Acosta", "Deiby Flores", "Denil Maldonado",
+  "Jorge Álvarez", "Jonathan Rougier", "Luis López", "Rigoberto Rivas",
+  "Romell Quioto",
+  // Hungary
+  "Ádám Lang", "Ádám Nagy", "Attila Szalai", "Callum Styles",
+  "Dominik Szoboszlai", "Endre Botka", "Kevin Csoboth", "Martin Ádám",
+  "Péter Gulácsi", "Roland Sallai", "Willi Orbán",
+  // Indonesia
+  "Ernando Ari", "Ivar Jenner", "Jordi Amat", "Marc Klok",
+  "Marselino Ferdinan", "Nathan Tjoe-A-On", "Pratama Arhan",
+  "Rafael Struick", "Ragnar Oratmangoen", "Rizky Ridho", "Sandy Walsh",
+  // Iran
+  "Ahmad Noorollahi", "Ali Gholizadeh", "Ali Karimi", "Alireza Beiranvand",
+  "Allahyar Sayyadmanesh", "Hossein Hosseini", "Majid Hosseini",
+  "Mehdi Taremi", "Milad Mohammadi", "Saeid Ezatolahi", "Sardar Azmoun",
+  // Italy
+  "Alessandro Bastoni", "Alex Meret", "Bryan Cristante", "Davide Frattesi",
+  "Federico Chiesa", "Federico Dimarco", "Francesco Acerbi", "Giacomo Raspadori",
+  "Gianluigi Donnarumma", "Giovanni Di Lorenzo", "Gianluca Scamacca",
+  "Lorenzo Pellegrini", "Manuel Locatelli", "Mateo Retegui", "Nicolò Barella",
+  "Nicolò Zaniolo", "Sandro Tonali", "Stephan El Shaarawy",
+  // Ivory Coast
+  "Badra Ali Sangaré", "Franck Kessié", "Ibrahim Sangaré", "Jean-Philippe Gbamin",
+  "Jonathan Bamba", "Max Gradel", "Nicolas Pépé", "Oumar Diakité",
+  "Sébastien Haller", "Serge Aurier", "Simon Deli", "Wilfried Singo",
+  "Wilfried Zaha",
+  // Japan
+  "Ayase Ueda", "Daichi Kamada", "Daizen Maeda", "Hidemasa Morita",
+  "Junya Ito", "Kaoru Mitoma", "Keito Nakamura", "Ko Itakura",
+  "Kōsei Tategami", "Reo Hatate", "Ritsu Dōan", "Shōgo Taniguchi",
+  "Shuichi Gonda", "Takefusa Kubo", "Takehiro Tomiyasu", "Takumi Minamino",
+  "Wataru Endō", "Yukinari Sugawara", "Zion Suzuki",
+  // Kenya
+  "Arnold Origi", "Brian Otieno", "Erick Ouma", "Johanna Omollo",
+  "Joash Onyango", "Joseph Okumu", "Kenneth Muguna", "Masud Juma",
+  "Michael Olunga",
+  // Mali
+  "Amadou Haidara", "Boubacar Kouyaté", "El Bilal Touré", "Hamari Traoré",
+  "Ibrahima Koné", "Ibrahim Mounkoro", "Lassana Coulibaly", "Mohamed Camara",
+  "Moussa Djenepo", "Yves Bissouma",
+  // Mexico
+  "Alexis Vega", "Edson Álvarez", "Guillermo Ochoa", "Henry Martín",
+  "Héctor Herrera", "Hirving Lozano", "Jesús Gallardo", "Johan Vásquez",
+  "Jorge Sánchez", "Julián Araujo", "Luis Malagón", "Néstor Araujo",
+  "Orbelin Pineda", "Raúl Jiménez", "Roberto Alvarado", "Santiago Giménez",
+  "Uriel Antuna",
+  // Morocco
+  "Abdessamad Ezzalzouli", "Achraf Hakimi", "Ahmed Reda Tagnaouti",
+  "Ayoub El Kaabi", "Azzedine Ounahi", "Hakim Ziyech", "Ilias Chair",
+  "Jawad El Yamiq", "Nayef Aguerd", "Noussair Mazraoui", "Romain Saïss",
+  "Selim Amallah", "Sofiane Boufal", "Sofyan Amrabat", "Yassine Bounou",
+  "Youssef En-Nesyri",
+  // Netherlands
+  "Brian Brobbey", "Cody Gakpo", "Denzel Dumfries", "Donyell Malen",
+  "Frenkie de Jong", "Jasper Cillessen", "Lutsharel Geertruida", "Marten de Roon",
+  "Matthijs de Ligt", "Memphis Depay", "Nathan Aké", "Quinten Timber",
+  "Remko Pasveer", "Ryan Gravenberch", "Stefan de Vrij", "Teun Koopmeiners",
+  "Virgil van Dijk", "Wout Weghorst", "Xavi Simons",
+  // New Zealand
+  "Chris Wood", "Clayton Lewis", "Elijah Just", "Liberato Cacace",
+  "Matthew Garbett", "Michael Boxall", "Myer Bevan", "Ryan Thomas",
+  "Sarpreet Singh", "Stefan Marinović", "Tim Payne", "Tommy Smith",
+  "Winston Reid",
+  // Nigeria
+  "Alex Iwobi", "Calvin Bassey", "Cyriel Dessers", "Emmanuel Dennis",
+  "Francis Uzoho", "Joe Aribo", "Kelechi Iheanacho", "Leon Balogun",
+  "Maduka Okoye", "Moses Simon", "Ola Aina", "Samuel Chukwueze",
+  "Semi Ajayi", "Taiwo Awoniyi", "Victor Osimhen", "Wilfred Ndidi",
+  "William Troost-Ekong",
+  // Panama
+  "Abdiel Arroyo", "Adalberto Carrasquilla", "Azmahar Ariano", "César Blackman",
+  "Cecilio Waterman", "Eric Davis", "Fidel Escobar", "Ismael Díaz",
+  "Luis Mejía", "Rolando Blackburn",
+  // Paraguay
+  "Ángel Romero", "Andrés Cubas", "Antony Silva", "Antonio Sanabria",
+  "Fabián Balbuena", "Gustavo Gómez", "Mathías Villasanti", "Miguel Almirón",
+  "Omar Alderete", "Richard Sánchez", "Santiago Arzamendia",
+  // Peru
+  "Alex Valera", "Alexander Callens", "André Carrillo", "Carlos Zambrano",
+  "Christian Cueva", "Christofer Gonzáles", "Edison Flores", "Gianluca Lapadula",
+  "Luis Advíncula", "Miguel Trauco", "Pedro Gallese", "Renato Tapia",
+  "Yoshimar Yotún",
+  // Portugal
+  "Bernardo Silva", "Bruma", "Bruno Fernandes", "Cristiano Ronaldo",
+  "Danilo Pereira", "Diogo Costa", "Diogo Jota", "Gonçalo Inácio",
+  "Gonçalo Ramos", "João Cancelo", "João Félix", "Nuno Mendes",
+  "Otávio", "Pedro Neto", "Rafael Leão", "Rafa Silva",
+  "Rúben Dias", "Rúben Neves", "Rui Patrício", "Vitinha",
+  // Qatar
+  "Abdelkarim Hassan", "Akram Afif", "Almoez Ali", "Bassam Al-Rawi",
+  "Hassan Al-Haydos", "Ismaeil Mohamad", "Karim Boudiaf", "Meshaal Barsham",
+  "Mohammed Al-Bakri", "Mohammed Muntari", "Pedro Miguel",
+  // Saudi Arabia
+  "Abdullah Al-Hamdan", "Ali Al-Bulayhi", "Firas Al-Buraikan",
+  "Hassan Al-Tambakti", "Mohammed Al-Owais", "Mohammed Kanno",
+  "Salem Al-Dawsari", "Saleh Al-Shehri", "Sultan Al-Ghanam",
+  // Senegal
+  "Alfred Gomis", "Boulaye Dia", "Édouard Mendy", "Fodé Ballo-Touré",
+  "Habib Diallo", "Idrissa Gueye", "Iliman Ndiaye", "Ismaila Sarr",
+  "Kalidou Koulibaly", "Lamine Camara", "Nicolas Jackson", "Pape Abou Cissé",
+  "Pape Matar Sarr", "Sadio Mané", "Youssouf Sabaly",
+  // Serbia
+  "Aleksandar Mitrović", "Andrija Živković", "Dušan Tadić", "Dušan Vlahović",
+  "Filip Kostić", "Luka Jović", "Miloš Veljković", "Nemanja Gudelj",
+  "Nikola Milenković", "Predrag Rajković", "Saša Lukić", "Sergej Milinković-Savić",
+  "Strahinja Pavlović", "Vanja Milinković-Savić",
+  // Slovenia
+  "Adam Gnezda Čerin", "Andraž Šporar", "Benjamin Šeško", "Benjamin Verbič",
+  "Erik Janža", "Jan Oblak", "Jon Gorenc Stanković", "Miha Blažič",
+  "Miha Zajc", "Timi Max Elšnik", "Žan Celar",
+  // South Africa
+  "Bongani Zungu", "Bruce Bvuma", "Ethan Brooks", "Evidence Makgopa",
+  "Lebo Mothiba", "Lyle Foster", "Percy Tau", "Reeve Frosler",
+  "Ronwen Williams", "Rushine De Reuck", "Siyanda Xulu", "Themba Zwane",
+  // South Korea
+  "Cho Gue-sung", "Hwang Hee-chan", "Hwang In-beom", "Jo Hyeon-woo",
+  "Kim Jin-su", "Kim Min-jae", "Kim Seung-gyu", "Kim Young-gwon",
+  "Lee Kang-in", "Lee Jae-sung", "Oh Hyeon-gyu", "Son Heung-min",
+  "Song Min-kyu",
+  // Spain
+  "Alejandro Balde", "Álvaro Morata", "Ansu Fati", "Aymeric Laporte",
+  "Dani Carvajal", "Dani Olmo", "Dani Vivian", "David Raya",
+  "Fabián Ruiz", "Ferran Torres", "Gavi", "Joselu",
+  "Lamine Yamal", "Marc Cucurella", "Mikel Merino", "Mikel Oyarzabal",
+  "Nico Williams", "Pau Cubarsí", "Pedri", "Robin Le Normand",
+  "Rodrigo Hernández", "Unai Simón",
+  // Switzerland
+  "Breel Embolo", "Dan Ndoye", "Denis Zakaria", "Fabian Rieder",
+  "Fabian Schär", "Granit Xhaka", "Gregor Kobel", "Manuel Akanji",
+  "Michel Aebischer", "Noah Okafor", "Remo Freuler", "Ricardo Rodríguez",
+  "Ruben Vargas", "Silvan Widmer", "Xherdan Shaqiri", "Yann Sommer",
+  "Zeki Amdouni",
+  // Trinidad and Tobago
+  "Alvin Jones", "Andre Raymond", "Aubrey David", "Joevin Jones",
+  "Judah Garcia", "Kevin Molino", "Levi Garcia", "Marvin Phillip",
+  "Noah Powder", "Sheldon Bateau", "Triston Hodge",
+  // Ukraine
+  "Artem Dovbyk", "Georgiy Sudakov", "Heorhiy Bushchan", "Mykhailo Mudryk",
+  "Mykola Matviienko", "Oleksandr Zinchenko", "Oleksandr Zubkov",
+  "Roman Yaremchuk", "Ruslan Malinovskyi", "Taras Stepanenko",
+  "Viktor Tsygankov", "Vitaliy Mykolenko", "Yukhym Konoplia",
+  // United States
+  "Antonee Robinson", "Brenden Aaronson", "Christian Pulisic",
+  "Folarin Balogun", "Giovanni Reyna", "Joe Scally", "Jordan Morris",
+  "Josh Sargent", "Matt Turner", "Miles Robinson", "Ricardo Pepi",
+  "Sergino Dest", "Tim Weah", "Tyler Adams", "Weston McKennie",
+  "Yunus Musah", "Zack Steffen",
+  // Uruguay
+  "Darwin Núñez", "Facundo Pellistri", "Federico Valverde", "Giorgian De Arrascaeta",
+  "José María Giménez", "Mathías Olivera", "Maximiliano Gómez",
+  "Nahitan Nández", "Nicolás De La Cruz", "Rodrigo Bentancur",
+  "Ronald Araújo", "Sergio Rochet",
+].sort();

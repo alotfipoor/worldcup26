@@ -48,12 +48,12 @@ export async function PUT(req: NextRequest) {
   }
 
   const window = await getTournamentWindow();
-  const { champion, topScorer } = await req.json();
+  const { champion, topScorer, topAssist } = await req.json();
 
   const prediction = await prisma.tournamentPrediction.upsert({
     where: { userId_window: { userId: session.userId, window } },
-    create: { userId: session.userId, window, champion, topScorer },
-    update: { champion, topScorer },
+    create: { userId: session.userId, window, champion, topScorer, topAssist },
+    update: { champion, topScorer, topAssist },
   });
 
   return NextResponse.json({ prediction, window });
