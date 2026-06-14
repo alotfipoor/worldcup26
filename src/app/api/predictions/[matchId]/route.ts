@@ -36,53 +36,33 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { homeScore, awayScore, predictedWinner } = body;
+  const { homeScore, awayScore } = body;
 
-  const hasScores =
-    homeScore !== undefined &&
-    homeScore !== null &&
-    awayScore !== undefined &&
-    awayScore !== null;
-
-  const hasWinner = predictedWinner !== undefined && predictedWinner !== null;
-
-  if (!hasScores && !hasWinner) {
-    return NextResponse.json({ error: "Provide scores or a winner" }, { status: 400 });
+  if (homeScore === undefined || homeScore === null || awayScore === undefined || awayScore === null) {
+    return NextResponse.json({ error: "Provide home and away scores" }, { status: 400 });
   }
 
-  if (hasScores) {
-    const h = parseInt(homeScore);
-    const a = parseInt(awayScore);
-    if (isNaN(h) || isNaN(a) || h < 0 || a < 0 || h > 20 || a > 20) {
-      return NextResponse.json({ error: "Invalid scores" }, { status: 400 });
-    }
+  const h = parseInt(homeScore);
+  const a = parseInt(awayScore);
+  if (isNaN(h) || isNaN(a) || h < 0 || a < 0 || h > 20 || a > 20) {
+    return NextResponse.json({ error: "Invalid scores" }, { status: 400 });
   }
 
-  if (hasWinner && !["home", "away", "draw"].includes(predictedWinner)) {
-    return NextResponse.json({ error: "Invalid winner" }, { status: 400 });
-  }
-
-  const isKnockout = match.stage !== "GROUP";
-  if (hasWinner && predictedWinner === "draw" && isKnockout) {
-    return NextResponse.json(
-      { error: "No draws in knockout rounds" },
-      { status: 400 }
-    );
-  }
+  const derivedWinner = h > a ? "home" : a > h ? "away" : "draw";
 
   const prediction = await prisma.prediction.upsert({
     where: { userId_matchId: { userId: session.userId, matchId } },
     create: {
       userId: session.userId,
       matchId,
-      homeScore: hasScores ? parseInt(homeScore) : null,
-      awayScore: hasScores ? parseInt(awayScore) : null,
-      predictedWinner: hasScores ? null : predictedWinner,
+      homeScore: h,
+      awayScore: a,
+      predictedWinner: derivedWinner,
     },
     update: {
-      homeScore: hasScores ? parseInt(homeScore) : null,
-      awayScore: hasScores ? parseInt(awayScore) : null,
-      predictedWinner: hasScores ? null : predictedWinner,
+      homeScore: h,
+      awayScore: a,
+      predictedWinner: derivedWinner,
       points: null,
       reason: null,
     },
