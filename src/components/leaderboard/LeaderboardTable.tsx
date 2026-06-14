@@ -67,7 +67,7 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
   return (
     <div className="space-y-1.5">
       {/* Header */}
-      <div className="grid grid-cols-[2rem_1fr_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_3.5rem] gap-1 px-3 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="grid grid-cols-[1.75rem_1fr_1.75rem_1.75rem_1.75rem_1.75rem_1.75rem_3rem] gap-0.5 px-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         <span className="text-center">#</span>
         <span>Player</span>
         <span className="text-center text-emerald-600 dark:text-emerald-400">6</span>
@@ -87,7 +87,7 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
             key={user.id}
             href={`/players/${user.id}`}
             className={cn(
-              "grid grid-cols-[2rem_1fr_2.5rem_2.5rem_2.5rem_2.5rem_2.5rem_3.5rem] gap-1 items-center px-3 py-3 rounded-2xl border transition-all duration-150",
+              "grid grid-cols-[1.75rem_1fr_1.75rem_1.75rem_1.75rem_1.75rem_1.75rem_3rem] gap-0.5 items-center px-2 py-3 rounded-2xl border transition-all duration-150",
               isMe
                 ? "bg-primary/10 border-primary/30 hover:border-primary/50"
                 : isFirst
@@ -104,7 +104,7 @@ export default function LeaderboardTable({ users, currentUserId }: LeaderboardTa
 
             {/* Name */}
             <div className="flex items-center gap-2 min-w-0">
-              <span className="hidden sm:contents"><UserAvatar name={user.name} /></span>
+              <div className="hidden sm:block flex-shrink-0"><UserAvatar name={user.name} /></div>
               <div className="min-w-0">
                 <span className={cn(
                   "text-sm font-semibold truncate block leading-tight",
