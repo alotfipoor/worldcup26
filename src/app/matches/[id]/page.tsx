@@ -99,17 +99,26 @@ export default async function MatchDetailPage({
   const match = await prisma.match.findUnique({ where: { id } });
   if (!match) notFound();
 
-  const prediction = await prisma.prediction.findUnique({
-    where: { userId_matchId: { userId: session.userId, matchId: id } },
-  });
+  const lockTime = getLockTime(new Date(match.kickoff));
+  const isLocked = new Date() >= lockTime;
+  const isFinished = match.status === "FINISHED";
+  const isLive = match.status === "LIVE";
+  const isKnockout = match.stage !== "GROUP";
 
-  const allPredictions =
-    match.status === "FINISHED"
-      ? await prisma.prediction.findMany({
-          where: { matchId: id, points: { not: null } },
+  const [prediction, allPredictions] = await Promise.all([
+    prisma.prediction.findUnique({
+      where: { userId_matchId: { userId: session.userId, matchId: id } },
+    }),
+    isLocked
+      ? prisma.prediction.findMany({
+          where: {
+            matchId: id,
+            ...(isFinished ? { points: { not: null } } : {}),
+          },
           include: { user: { select: { id: true, name: true } } },
         })
-      : [];
+      : Promise.resolve([]),
+  ]);
 
   const revealData = allPredictions.map((p) => ({
     userId: p.userId,
@@ -120,12 +129,6 @@ export default async function MatchDetailPage({
     points: p.points ?? 0,
     reason: p.reason,
   }));
-
-  const lockTime = getLockTime(new Date(match.kickoff));
-  const isLocked = new Date() >= lockTime;
-  const isFinished = match.status === "FINISHED";
-  const isLive = match.status === "LIVE";
-  const isKnockout = match.stage !== "GROUP";
 
   const stageLabel = STAGE_LABELS[match.stage] ?? match.stage;
   const groupLabel = formatGroupName(match.groupName);
@@ -250,7 +253,7 @@ export default async function MatchDetailPage({
           )}
         </div>
 
-        {isFinished && revealData.length > 0 && (
+        {isLocked && revealData.length > 0 && (
           <>
             <div className="border-t border-border" />
             <PredictionReveal
@@ -258,6 +261,7 @@ export default async function MatchDetailPage({
               homeTeam={match.homeTeam}
               awayTeam={match.awayTeam}
               currentUserId={session.userId}
+              showPoints={isFinished}
             />
           </>
         )}

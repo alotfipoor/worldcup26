@@ -15,6 +15,7 @@ interface PredictionRevealProps {
   homeTeam: string;
   awayTeam: string;
   currentUserId: string;
+  showPoints?: boolean;
 }
 
 const REASON_BADGE: Record<string, { label: string; color: string }> = {
@@ -62,6 +63,7 @@ export default function PredictionReveal({
   homeTeam,
   awayTeam,
   currentUserId,
+  showPoints = true,
 }: PredictionRevealProps) {
   if (predictions.length === 0) return null;
 
@@ -99,7 +101,9 @@ export default function PredictionReveal({
       {/* Per-player list */}
       <div className="space-y-1.5">
         {[...predictions]
-          .sort((a, b) => b.points - a.points)
+          .sort(showPoints
+            ? (a, b) => b.points - a.points
+            : (a, b) => a.userName.localeCompare(b.userName))
           .map((p) => {
             const badge = REASON_BADGE[p.reason ?? "wrong"] ?? REASON_BADGE.wrong;
             const isMe = p.userId === currentUserId;
@@ -121,10 +125,14 @@ export default function PredictionReveal({
                   <span className="text-muted-foreground text-xs">
                     {predLabel(p, homeTeam, awayTeam)}
                   </span>
-                  <span className={cn("text-xs font-bold", badge.color)}>{badge.label}</span>
-                  <span className={cn("text-sm font-bold tabular-nums", badge.color)}>
-                    {p.points}pt
-                  </span>
+                  {showPoints && (
+                    <>
+                      <span className={cn("text-xs font-bold", badge.color)}>{badge.label}</span>
+                      <span className={cn("text-sm font-bold tabular-nums", badge.color)}>
+                        {p.points}pt
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             );
