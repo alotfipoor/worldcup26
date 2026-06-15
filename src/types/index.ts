@@ -45,4 +45,5 @@ export interface SideBetItem {
   myAnswer: string | null;
   myPointsAwarded: number | null;
   predictionCount: number;
+  voters: string[]; // names of users who voted, no answers
 }

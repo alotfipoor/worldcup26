@@ -24,7 +24,7 @@ export default async function AdminPage() {
     prisma.sideBet.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        predictions: { select: { userId: true, answer: true, pointsAwarded: true } },
+        predictions: { select: { userId: true, answer: true, pointsAwarded: true, user: { select: { name: true } } } },
       },
     }),
   ]);
@@ -42,6 +42,7 @@ export default async function AdminPage() {
     myAnswer: null,
     myPointsAwarded: null,
     predictionCount: bet.predictions.length,
+    voters: bet.predictions.map((p) => p.user.name ?? "Unknown"),
   }));
 
   return (

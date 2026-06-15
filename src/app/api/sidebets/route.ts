@@ -11,7 +11,7 @@ export async function GET() {
     orderBy: { closesAt: "asc" },
     include: {
       predictions: {
-        select: { userId: true, answer: true, pointsAwarded: true },
+        select: { userId: true, answer: true, pointsAwarded: true, user: { select: { name: true } } },
       },
     },
   });
@@ -31,6 +31,7 @@ export async function GET() {
       myAnswer: myPred?.answer ?? null,
       myPointsAwarded: myPred?.pointsAwarded ?? null,
       predictionCount: bet.predictions.length,
+      voters: bet.predictions.map((p) => p.user.name ?? "Unknown"),
     };
   });
 

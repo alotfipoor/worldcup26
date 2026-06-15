@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,24 @@ function formatDeadline(iso: string): string {
   }).format(new Date(iso));
 }
 
-function SideBetCard({ bet: initialBet }: { bet: SideBetItem }) {
+function VoterList({ voters }: { voters: string[] }) {
+  if (voters.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {voters.map((name) => (
+        <span
+          key={name}
+          className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+        >
+          {name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function SideBetCard({ bet: initialBet, currentUserName }: { bet: SideBetItem; currentUserName: string }) {
+  const router = useRouter();
   const [bet, setBet] = useState(initialBet);
   const [answer, setAnswer] = useState(initialBet.myAnswer ?? "");
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +63,16 @@ function SideBetCard({ bet: initialBet }: { bet: SideBetItem }) {
       toast.error((d as { error?: string }).error ?? "Failed to submit");
       return;
     }
-    setBet((prev) => ({ ...prev, myAnswer: answer.trim() }));
+    const isNew = bet.myAnswer === null;
+    setBet((prev) => ({
+      ...prev,
+      myAnswer: answer.trim(),
+      predictionCount: isNew ? prev.predictionCount + 1 : prev.predictionCount,
+      voters: isNew && !prev.voters.includes(currentUserName)
+        ? [...prev.voters, currentUserName]
+        : prev.voters,
+    }));
+    router.refresh();
     toast.success("Answer saved!");
   }
 
@@ -80,6 +107,8 @@ function SideBetCard({ bet: initialBet }: { bet: SideBetItem }) {
           )}
         </div>
       )}
+
+      <VoterList voters={bet.voters} />
 
       {!bet.resolved && (
         <>
@@ -137,9 +166,10 @@ function SideBetCard({ bet: initialBet }: { bet: SideBetItem }) {
 
 interface SideBetsClientProps {
   bets: SideBetItem[];
+  currentUserName: string;
 }
 
-export default function SideBetsClient({ bets }: SideBetsClientProps) {
+export default function SideBetsClient({ bets, currentUserName }: SideBetsClientProps) {
   if (bets.length === 0) {
     return (
       <div className="text-center py-16 text-muted-foreground">
@@ -158,7 +188,7 @@ export default function SideBetsClient({ bets }: SideBetsClientProps) {
     return (
       <div className="space-y-2">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">{title}</p>
-        {items.map((b) => <SideBetCard key={b.id} bet={b} />)}
+        {items.map((b) => <SideBetCard key={b.id} bet={b} currentUserName={currentUserName} />)}
       </div>
     );
   }

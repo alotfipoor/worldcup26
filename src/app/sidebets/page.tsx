@@ -15,7 +15,7 @@ export default async function SideBetsPage() {
     orderBy: { closesAt: "asc" },
     include: {
       predictions: {
-        select: { userId: true, answer: true, pointsAwarded: true },
+        select: { userId: true, answer: true, pointsAwarded: true, user: { select: { name: true } } },
       },
     },
   });
@@ -35,6 +35,7 @@ export default async function SideBetsPage() {
       myAnswer: myPred?.answer ?? null,
       myPointsAwarded: myPred?.pointsAwarded ?? null,
       predictionCount: bet.predictions.length,
+      voters: bet.predictions.map((p) => p.user.name ?? "Unknown"),
     };
   });
 
@@ -45,7 +46,7 @@ export default async function SideBetsPage() {
           <h1 className="text-xl font-bold">Side Bets</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Bonus questions · fixed point rewards</p>
         </div>
-        <SideBetsClient bets={items} />
+        <SideBetsClient bets={items} currentUserName={session.user.name ?? "Unknown"} />
       </div>
     </PageWrapper>
   );
