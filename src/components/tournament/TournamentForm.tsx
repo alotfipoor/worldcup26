@@ -78,6 +78,7 @@ export default function TournamentForm({
   const [champion, setChampion] = useState(activePrediction?.champion ?? "");
   const [topScorer, setTopScorer] = useState(activePrediction?.topScorer ?? "");
   const [topAssist, setTopAssist] = useState(activePrediction?.topAssist ?? "");
+  const [bestGoalkeeper, setBestGoalkeeper] = useState(activePrediction?.bestGoalkeeper ?? "");
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -91,7 +92,7 @@ export default function TournamentForm({
     const res = await fetch("/api/tournament", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ champion, topScorer, topAssist }),
+      body: JSON.stringify({ champion, topScorer, topAssist, bestGoalkeeper }),
     });
     setSaving(false);
 
@@ -109,7 +110,7 @@ export default function TournamentForm({
   if (locked) {
     return (
       <div className="space-y-4">
-        <Section title="World Cup Champion">
+        <Section title="World Cup Champion" pts={15}>
           <div className="flex items-center gap-2 text-sm">
             {activePrediction?.champion ? (
               <>
@@ -121,16 +122,23 @@ export default function TournamentForm({
             )}
           </div>
         </Section>
-        <Section title="Golden Boot (Top Scorer)">
+        <Section title="Golden Boot (Top Scorer)" pts={10}>
           <span className="text-sm font-medium">
             {activePrediction?.topScorer || (
               <span className="text-muted-foreground">No prediction made</span>
             )}
           </span>
         </Section>
-        <Section title="Top Assists">
+        <Section title="Top Assists" pts={10}>
           <span className="text-sm font-medium">
             {activePrediction?.topAssist || (
+              <span className="text-muted-foreground">No prediction made</span>
+            )}
+          </span>
+        </Section>
+        <Section title="Best Goalkeeper" pts={10}>
+          <span className="text-sm font-medium">
+            {activePrediction?.bestGoalkeeper || (
               <span className="text-muted-foreground">No prediction made</span>
             )}
           </span>
@@ -150,12 +158,16 @@ export default function TournamentForm({
           <p>Champion: {initialPrediction.champion ?? "–"}</p>
           <p>Top scorer: {initialPrediction.topScorer ?? "–"}</p>
           <p>Top assists: {initialPrediction.topAssist ?? "–"}</p>
+          <p>Best goalkeeper: {initialPrediction.bestGoalkeeper ?? "–"}</p>
         </div>
       )}
 
       {/* Champion picker */}
       <div className="space-y-3">
-        <Label className="text-base font-semibold">World Cup Champion</Label>
+        <Label className="text-base font-semibold">
+          World Cup Champion
+          <span className="ml-2 text-xs font-normal text-muted-foreground">15 pts</span>
+        </Label>
         {champion && (
           <div className="flex items-center gap-2 text-sm text-primary font-medium">
             <CheckCircle2 className="h-4 w-4" />
@@ -187,6 +199,7 @@ export default function TournamentForm({
       <div className="space-y-2">
         <Label htmlFor="topScorer" className="text-base font-semibold">
           Golden Boot (Top Scorer)
+          <span className="ml-2 text-xs font-normal text-muted-foreground">10 pts</span>
         </Label>
         <PlayerAutocomplete
           id="topScorer"
@@ -201,11 +214,27 @@ export default function TournamentForm({
       <div className="space-y-2">
         <Label htmlFor="topAssist" className="text-base font-semibold">
           Top Assists
+          <span className="ml-2 text-xs font-normal text-muted-foreground">10 pts</span>
         </Label>
         <PlayerAutocomplete
           id="topAssist"
           value={topAssist}
           onChange={setTopAssist}
+          players={WC2026_PLAYERS}
+          placeholder="Player name…"
+        />
+      </div>
+
+      {/* Best Goalkeeper */}
+      <div className="space-y-2">
+        <Label htmlFor="bestGoalkeeper" className="text-base font-semibold">
+          Best Goalkeeper
+          <span className="ml-2 text-xs font-normal text-muted-foreground">10 pts</span>
+        </Label>
+        <PlayerAutocomplete
+          id="bestGoalkeeper"
+          value={bestGoalkeeper}
+          onChange={setBestGoalkeeper}
           players={WC2026_PLAYERS}
           placeholder="Player name…"
         />
@@ -220,7 +249,7 @@ export default function TournamentForm({
       </Button>
 
       <p className="text-[10px] text-muted-foreground text-center">
-        15 pts for correct champion · 15 pts for correct top scorer · 10 pts for correct top assists
+        Champion: 15 pts · Top scorer, assists, goalkeeper: 10 pts each
         {window === "INITIAL"
           ? " · Can update after group stage"
           : " · Locks when knockouts begin"}
@@ -231,16 +260,25 @@ export default function TournamentForm({
 
 function Section({
   title,
+  pts,
   children,
 }: {
   title: string;
+  pts?: number;
   children: React.ReactNode;
 }) {
   return (
     <div className="bg-card rounded-xl border border-border p-4 space-y-2">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-        {title}
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          {title}
+        </h3>
+        {pts !== undefined && (
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+            {pts} pts
+          </span>
+        )}
+      </div>
       {children}
     </div>
   );

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Copy, Trash2, RefreshCw, Plus, Shield } from "lucide-react";
+import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SideBetItem } from "@/types";
 
@@ -20,11 +20,22 @@ interface AdminUser {
   _count: { predictions: number };
 }
 
+interface FinishedMatch {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  kickoff: string;
+  predictionCount: number;
+}
+
 interface AdminPanelProps {
   users: AdminUser[];
   lastSync: Date | null;
   matchCount: number;
   sideBets: SideBetItem[];
+  finishedMatches: FinishedMatch[];
 }
 
 export default function AdminPanel({
@@ -32,6 +43,7 @@ export default function AdminPanel({
   lastSync,
   matchCount,
   sideBets: initialSideBets,
+  finishedMatches,
 }: AdminPanelProps) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
@@ -39,7 +51,7 @@ export default function AdminPanel({
   const [creating, setCreating] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"users" | "sidebets">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "sidebets" | "matches">("users");
   const [sideBets, setSideBets] = useState(initialSideBets);
   const [newQuestion, setNewQuestion] = useState("");
   const [newClosesAt, setNewClosesAt] = useState("");
@@ -49,6 +61,10 @@ export default function AdminPanel({
   const [creatingBet, setCreatingBet] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resolveAnswer, setResolveAnswer] = useState("");
+  const [overridingMatchId, setOverridingMatchId] = useState<string | null>(null);
+  const [overrideHome, setOverrideHome] = useState("");
+  const [overrideAway, setOverrideAway] = useState("");
+  const [overriding, setOverriding] = useState(false);
 
   async function createUser() {
     setCreating(true);
@@ -154,10 +170,25 @@ export default function AdminPanel({
     toast.success("Deleted");
   }
 
+  async function overrideMatch(matchId: string) {
+    setOverriding(true);
+    const res = await fetch("/api/admin/override", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ matchId, homeScore: parseInt(overrideHome), awayScore: parseInt(overrideAway) }),
+    });
+    setOverriding(false);
+    if (!res.ok) { toast.error("Override failed"); return; }
+    const { scored } = await res.json();
+    toast.success(`Done! Re-scored ${scored} predictions.`);
+    setOverridingMatchId(null);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-5">
       {/* Tab switcher */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setActiveTab("users")}
           className={cn(
@@ -179,6 +210,17 @@ export default function AdminPanel({
           )}
         >
           Side Bets
+        </button>
+        <button
+          onClick={() => setActiveTab("matches")}
+          className={cn(
+            "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+            activeTab === "matches"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Matches
         </button>
       </div>
 
@@ -285,6 +327,93 @@ export default function AdminPanel({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Matches tab */}
+      {activeTab === "matches" && (
+        <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-4 space-y-1">
+            <h2 className="font-semibold text-sm flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              Override Match Score & Rescore
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Use this to correct a wrong score and re-calculate all prediction points for that match.
+            </p>
+          </div>
+          {finishedMatches.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No finished matches yet.</p>
+          ) : (
+            finishedMatches.map((match) => (
+              <div key={match.id} className="bg-card rounded-xl border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {match.homeTeam} vs {match.awayTeam}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {match.homeScore ?? "?"} – {match.awayScore ?? "?"} &middot; {match.predictionCount} predictions &middot;{" "}
+                      {new Intl.DateTimeFormat("default", { dateStyle: "short" }).format(new Date(match.kickoff))}
+                    </p>
+                  </div>
+                  {overridingMatchId !== match.id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs px-3 flex-shrink-0"
+                      onClick={() => {
+                        setOverridingMatchId(match.id);
+                        setOverrideHome(String(match.homeScore ?? ""));
+                        setOverrideAway(String(match.awayScore ?? ""));
+                      }}
+                    >
+                      Override
+                    </Button>
+                  )}
+                </div>
+                {overridingMatchId === match.id && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        value={overrideHome}
+                        onChange={(e) => setOverrideHome(e.target.value)}
+                        className="h-8 w-16 text-center text-sm"
+                        placeholder="H"
+                      />
+                      <span className="text-sm text-muted-foreground">–</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={overrideAway}
+                        onChange={(e) => setOverrideAway(e.target.value)}
+                        className="h-8 w-16 text-center text-sm"
+                        placeholder="A"
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs px-3"
+                      disabled={overriding || overrideHome === "" || overrideAway === ""}
+                      onClick={() => overrideMatch(match.id)}
+                    >
+                      {overriding ? "Saving…" : "Save & Rescore"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs"
+                      onClick={() => setOverridingMatchId(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       )}
 

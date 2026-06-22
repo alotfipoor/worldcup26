@@ -11,7 +11,7 @@ export default async function AdminPage() {
   const session = await getSession();
   if (!session || session.user.role !== "ADMIN") redirect("/");
 
-  const [users, lastSync, matchCount, rawBets] = await Promise.all([
+  const [users, lastSync, matchCount, rawBets, finishedMatches] = await Promise.all([
     prisma.user.findMany({
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { predictions: true } } },
@@ -25,6 +25,19 @@ export default async function AdminPage() {
       orderBy: { createdAt: "desc" },
       include: {
         predictions: { select: { userId: true, answer: true, pointsAwarded: true, user: { select: { name: true } } } },
+      },
+    }),
+    prisma.match.findMany({
+      where: { status: "FINISHED" },
+      orderBy: { kickoff: "desc" },
+      select: {
+        id: true,
+        homeTeam: true,
+        awayTeam: true,
+        homeScore: true,
+        awayScore: true,
+        kickoff: true,
+        _count: { select: { predictions: true } },
       },
     }),
   ]);
@@ -54,6 +67,15 @@ export default async function AdminPage() {
           lastSync={lastSync?.syncedAt ?? null}
           matchCount={matchCount}
           sideBets={sideBets}
+          finishedMatches={finishedMatches.map((m) => ({
+            id: m.id,
+            homeTeam: m.homeTeam,
+            awayTeam: m.awayTeam,
+            homeScore: m.homeScore,
+            awayScore: m.awayScore,
+            kickoff: m.kickoff.toISOString(),
+            predictionCount: m._count.predictions,
+          }))}
         />
       </div>
     </PageWrapper>

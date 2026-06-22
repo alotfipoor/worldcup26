@@ -93,6 +93,7 @@ export default async function ComparePage({
   const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
   const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
   const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
+  const actualBestGoalkeeper = process.env.ACTUAL_BEST_GOALKEEPER ?? "";
 
   function getTournamentPoints(
     player: NonNullable<typeof playerA>
@@ -105,6 +106,7 @@ export default async function ComparePage({
       champion: actualChampion,
       topScorer: actualTopScorer,
       topAssist: actualTopAssist,
+      bestGoalkeeper: actualBestGoalkeeper,
     });
   }
 

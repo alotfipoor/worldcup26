@@ -15,8 +15,9 @@ export const POINTS = {
   correct_winner_only: 2,
   wrong: 0,
   tournament_champion: 15,
-  tournament_top_scorer: 15,
+  tournament_top_scorer: 10,
   tournament_top_assist: 10,
+  tournament_best_goalkeeper: 10,
 } as const;
 
 function getWinner(
@@ -82,8 +83,8 @@ export function calculateMatchPoints(
 }
 
 export function calculateTournamentPoints(
-  prediction: { champion: string | null; topScorer: string | null; topAssist: string | null },
-  actual: { champion: string; topScorer: string; topAssist: string }
+  prediction: { champion: string | null; topScorer: string | null; topAssist: string | null; bestGoalkeeper?: string | null },
+  actual: { champion: string; topScorer: string; topAssist: string; bestGoalkeeper: string }
 ): number {
   let points = 0;
   if (
@@ -94,15 +95,24 @@ export function calculateTournamentPoints(
   }
   if (
     prediction.topScorer &&
+    actual.topScorer &&
     prediction.topScorer.toLowerCase() === actual.topScorer.toLowerCase()
   ) {
     points += POINTS.tournament_top_scorer;
   }
   if (
     prediction.topAssist &&
+    actual.topAssist &&
     prediction.topAssist.toLowerCase() === actual.topAssist.toLowerCase()
   ) {
     points += POINTS.tournament_top_assist;
+  }
+  if (
+    prediction.bestGoalkeeper &&
+    actual.bestGoalkeeper &&
+    prediction.bestGoalkeeper.toLowerCase() === actual.bestGoalkeeper.toLowerCase()
+  ) {
+    points += POINTS.tournament_best_goalkeeper;
   }
   return points;
 }

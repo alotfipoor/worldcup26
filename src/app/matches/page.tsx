@@ -2,38 +2,117 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
-import MatchCard from "@/components/matches/MatchCard";
+import MatchesView from "@/components/matches/MatchesView";
 import AutoRefresh from "@/components/AutoRefresh";
-import { STAGE_LABELS, STAGE_ORDER } from "@/lib/constants";
+import { STAGE_LABELS, STAGE_ORDER, formatGroupName } from "@/lib/constants";
 import { maybeTriggerBackgroundSync } from "@/lib/sync";
 import type { Match, Prediction } from "@prisma/client";
+import type {
+  ClientMatch,
+  ClientPrediction,
+  GroupData,
+  KnockoutSection,
+  TeamStanding,
+} from "@/components/matches/MatchesView";
 
 export const revalidate = 30;
 
-function groupByStage(
-  matches: (Match & { userPrediction: Prediction | null })[]
-) {
-  const groups: Record<string, (Match & { userPrediction: Prediction | null })[]> = {};
-  for (const match of matches) {
-    if (!groups[match.stage]) groups[match.stage] = [];
-    groups[match.stage].push(match);
+function serializeMatch(m: Match & { userPrediction: Prediction | null }): ClientMatch {
+  const pred = m.userPrediction;
+  const clientPred: ClientPrediction | null = pred
+    ? {
+        id: pred.id,
+        homeScore: pred.homeScore,
+        awayScore: pred.awayScore,
+        predictedWinner: pred.predictedWinner,
+        points: pred.points,
+        reason: pred.reason,
+      }
+    : null;
+
+  return {
+    id: m.id,
+    homeTeam: m.homeTeam,
+    awayTeam: m.awayTeam,
+    homeScore: m.homeScore,
+    awayScore: m.awayScore,
+    status: m.status,
+    kickoff: m.kickoff.toISOString(),
+    stage: m.stage,
+    groupName: m.groupName,
+    goals: m.goals,
+    syncedAt: m.syncedAt?.toISOString() ?? null,
+    externalId: m.externalId,
+    userPrediction: clientPred,
+  };
+}
+
+function computeStandings(groupMatches: ClientMatch[]): TeamStanding[] {
+  const teams = new Map<string, TeamStanding>();
+
+  // Seed every team from every match (including scheduled games)
+  for (const m of groupMatches) {
+    for (const team of [m.homeTeam, m.awayTeam]) {
+      if (!teams.has(team)) {
+        teams.set(team, {
+          team,
+          played: 0,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          gf: 0,
+          ga: 0,
+          gd: 0,
+          points: 0,
+        });
+      }
+    }
   }
-  return Object.entries(groups)
-    .sort(([a], [b]) => (STAGE_ORDER[a] ?? 99) - (STAGE_ORDER[b] ?? 99))
-    .map(([stage, stageMatches]) => ({
-      stage,
-      label: STAGE_LABELS[stage] ?? stage,
-      matches: stageMatches.sort(
-        (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
-      ),
-    }));
+
+  // Accumulate from finished matches only
+  for (const m of groupMatches) {
+    if (m.status !== "FINISHED" || m.homeScore === null || m.awayScore === null) continue;
+    const home = teams.get(m.homeTeam)!;
+    const away = teams.get(m.awayTeam)!;
+
+    home.played++;
+    away.played++;
+    home.gf += m.homeScore;
+    home.ga += m.awayScore;
+    away.gf += m.awayScore;
+    away.ga += m.homeScore;
+    home.gd = home.gf - home.ga;
+    away.gd = away.gf - away.ga;
+
+    if (m.homeScore > m.awayScore) {
+      home.wins++;
+      home.points += 3;
+      away.losses++;
+    } else if (m.homeScore < m.awayScore) {
+      away.wins++;
+      away.points += 3;
+      home.losses++;
+    } else {
+      home.draws++;
+      away.draws++;
+      home.points += 1;
+      away.points += 1;
+    }
+  }
+
+  return Array.from(teams.values()).sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.gd - a.gd ||
+      b.gf - a.gf ||
+      a.team.localeCompare(b.team)
+  );
 }
 
 export default async function MatchesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  // Fire-and-forget background sync if data is stale
   maybeTriggerBackgroundSync();
 
   const [matches, predictions] = await Promise.all([
@@ -47,73 +126,57 @@ export default async function MatchesPage() {
     userPrediction: predMap.get(m.id) ?? null,
   }));
 
-  const groups = groupByStage(matchesWithPreds);
+  const serialized = matchesWithPreds.map(serializeMatch);
   const hasLive = matches.some((m) => m.status === "LIVE");
   const lastSync = matches.reduce<Date | null>((best, m) => {
     if (!m.syncedAt) return best;
     return !best || m.syncedAt > best ? m.syncedAt : best;
   }, null);
 
+  // ── Group Stage: bucket by group name, sort groups A → L ──
+  const groupMatches = serialized.filter((m) => m.stage === "GROUP");
+  const groupBuckets = new Map<string, ClientMatch[]>();
+  for (const m of groupMatches) {
+    const key = m.groupName ?? "__ungrouped";
+    if (!groupBuckets.has(key)) groupBuckets.set(key, []);
+    groupBuckets.get(key)!.push(m);
+  }
+  const groups: GroupData[] = Array.from(groupBuckets.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([rawName, gms]) => ({
+      name: formatGroupName(rawName) || rawName,
+      standings: computeStandings(gms),
+      matches: gms.sort(
+        (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
+      ),
+    }));
+
+  // ── Knockout: bucket by stage, sort by stage order ──
+  const knockoutMatches = serialized.filter((m) => m.stage !== "GROUP");
+  const knockoutBuckets = new Map<string, ClientMatch[]>();
+  for (const m of knockoutMatches) {
+    if (!knockoutBuckets.has(m.stage)) knockoutBuckets.set(m.stage, []);
+    knockoutBuckets.get(m.stage)!.push(m);
+  }
+  const knockout: KnockoutSection[] = Array.from(knockoutBuckets.entries())
+    .sort(([a], [b]) => (STAGE_ORDER[a] ?? 99) - (STAGE_ORDER[b] ?? 99))
+    .map(([stage, kms]) => ({
+      stage,
+      label: STAGE_LABELS[stage] ?? stage,
+      matches: kms.sort(
+        (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
+      ),
+    }));
+
   return (
     <PageWrapper>
-      {/* Auto-refresh: every 30s during live, 60s otherwise */}
       <AutoRefresh intervalMs={hasLive ? 30_000 : 60_000} />
-
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Matches</h1>
-        {lastSync && (
-          <span className="text-[11px] text-muted-foreground">
-            Updated {formatAgo(lastSync)}
-          </span>
-        )}
-      </div>
-
-      {groups.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-3">📅</p>
-          <p className="text-sm">Matches will appear here once synced</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {groups.map(({ stage, label, matches: stageMatches }) => {
-            const unpredicted = stageMatches.filter(
-              (m) => !m.userPrediction && m.status === "SCHEDULED"
-            ).length;
-
-            return (
-              <section key={stage}>
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    {label}
-                  </h2>
-                  {unpredicted > 0 && (
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                      {unpredicted} to predict
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {stageMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      prediction={match.userPrediction}
-                    />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
+      <MatchesView
+        groups={groups}
+        knockout={knockout}
+        lastSync={lastSync?.toISOString() ?? null}
+        hasMatches={serialized.length > 0}
+      />
     </PageWrapper>
   );
-}
-
-function formatAgo(date: Date): string {
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return "just now";
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
-  return `${Math.floor(mins / 60)}h ago`;
 }

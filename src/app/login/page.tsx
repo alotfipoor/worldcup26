@@ -17,7 +17,7 @@ async function getStandings() {
           select: { points: true },
         },
         tournamentPredictions: {
-          select: { champion: true, topScorer: true, topAssist: true, window: true },
+          select: { champion: true, topScorer: true, topAssist: true, bestGoalkeeper: true, window: true },
         },
       },
     });
@@ -25,6 +25,7 @@ async function getStandings() {
     const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
     const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
     const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
+    const actualBestGoalkeeper = process.env.ACTUAL_BEST_GOALKEEPER ?? "";
 
     return users
       .map((user) => {
@@ -34,7 +35,7 @@ async function getStandings() {
           user.tournamentPredictions.find((t) => t.window === "INITIAL");
         const tournamentPoints =
           actualChampion && latest
-            ? calculateTournamentPoints(latest, { champion: actualChampion, topScorer: actualTopScorer, topAssist: actualTopAssist })
+            ? calculateTournamentPoints(latest, { champion: actualChampion, topScorer: actualTopScorer, topAssist: actualTopAssist, bestGoalkeeper: actualBestGoalkeeper })
             : 0;
         return {
           id: user.id,

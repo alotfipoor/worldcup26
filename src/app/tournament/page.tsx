@@ -47,7 +47,7 @@ export default async function TournamentPage() {
         <div>
           <h1 className="text-xl font-bold">Tournament Predictions</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            15 pts each if correct
+            Champion: 15 pts · Top scorer, assists &amp; goalkeeper: 10 pts each
           </p>
         </div>
 

@@ -109,16 +109,17 @@ model Prediction {
 }
 
 model TournamentPrediction {
-  id        String           @id @default(cuid())
-  userId    String
-  champion  String?
-  topScorer String?
-  topAssist String?
-  window    PredictionWindow @default(INITIAL)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id               String           @id @default(cuid())
+  userId           String
+  champion         String?
+  topScorer        String?
+  topAssist        String?
+  bestGoalkeeper   String?
+  window           PredictionWindow @default(INITIAL)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, window])
 }
