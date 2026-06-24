@@ -65,6 +65,42 @@ export default function AdminPanel({
   const [overrideHome, setOverrideHome] = useState("");
   const [overrideAway, setOverrideAway] = useState("");
   const [overriding, setOverriding] = useState(false);
+  const [editingBetId, setEditingBetId] = useState<string | null>(null);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editClosesAt, setEditClosesAt] = useState("");
+  const [editPointsReward, setEditPointsReward] = useState(10);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  function toDatetimeLocal(iso: string): string {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  async function editSideBet(id: string) {
+    if (!editQuestion.trim() || !editClosesAt) return;
+    setSavingEdit(true);
+    const res = await fetch(`/api/admin/sidebets/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: editQuestion.trim(),
+        closesAt: new Date(editClosesAt).toISOString(),
+        pointsReward: editPointsReward,
+      }),
+    });
+    setSavingEdit(false);
+    if (!res.ok) { toast.error("Failed to save"); return; }
+    const { bet: updated } = await res.json();
+    setSideBets((prev) =>
+      prev.map((b) => b.id === id
+        ? { ...b, question: updated.question, closesAt: updated.closesAt, pointsReward: updated.pointsReward }
+        : b
+      )
+    );
+    setEditingBetId(null);
+    toast.success("Saved!");
+  }
 
   async function createUser() {
     setCreating(true);
@@ -504,6 +540,54 @@ export default function AdminPanel({
                     <p className="text-xs text-emerald-600 dark:text-emerald-400">
                       Correct: {bet.correctAnswer}
                     </p>
+                  ) : editingBetId === bet.id ? (
+                    <div className="space-y-2 pt-1">
+                      <Input
+                        value={editQuestion}
+                        onChange={(e) => setEditQuestion(e.target.value)}
+                        className="h-8 text-xs"
+                        placeholder="Question"
+                      />
+                      <div className="flex gap-2">
+                        <div className="flex-1 space-y-1">
+                          <Label className="text-xs text-muted-foreground">Closes at</Label>
+                          <Input
+                            type="datetime-local"
+                            value={editClosesAt}
+                            onChange={(e) => setEditClosesAt(e.target.value)}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="w-20 space-y-1">
+                          <Label className="text-xs text-muted-foreground">Points</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={editPointsReward}
+                            onChange={(e) => setEditPointsReward(Number(e.target.value))}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs px-3"
+                          disabled={savingEdit || !editQuestion.trim() || !editClosesAt}
+                          onClick={() => editSideBet(bet.id)}
+                        >
+                          {savingEdit ? "Saving…" : "Save"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 text-xs"
+                          onClick={() => setEditingBetId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : resolvingId === bet.id ? (
                     <div className="flex gap-2">
                       <Input
@@ -530,6 +614,19 @@ export default function AdminPanel({
                     </div>
                   ) : (
                     <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs px-3"
+                        onClick={() => {
+                          setEditingBetId(bet.id);
+                          setEditQuestion(bet.question);
+                          setEditClosesAt(toDatetimeLocal(bet.closesAt));
+                          setEditPointsReward(bet.pointsReward);
+                        }}
+                      >
+                        Edit
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
