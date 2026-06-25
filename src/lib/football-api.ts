@@ -2,10 +2,24 @@ const API_BASE = "https://api.football-data.org/v4";
 const COMPETITION = "WC";
 
 interface ApiTeam {
+  id: number;
   name: string;
   shortName: string;
   tla: string;
   crest: string;
+}
+
+export interface ApiStanding {
+  position: number;
+  team: { id: number; name: string };
+  playedGames: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
 }
 
 interface ApiScore {
@@ -30,6 +44,7 @@ export interface ApiMatch {
   status: string;
   stage: string;
   group: string | null;
+  venue?: string;
   homeTeam: ApiTeam;
   awayTeam: ApiTeam;
   score: ApiScore;
@@ -67,6 +82,13 @@ export async function fetchLiveMatches(): Promise<ApiMatch[]> {
 
 export async function fetchMatch(id: number): Promise<ApiMatch> {
   return apiFetch<ApiMatch>(`/matches/${id}`);
+}
+
+export async function fetchWCStandings(): Promise<{ group: string; table: ApiStanding[] }[]> {
+  const data = await apiFetch<{ standings: { stage: string; type: string; group: string; table: ApiStanding[] }[] }>(
+    `/competitions/${COMPETITION}/standings`
+  );
+  return data.standings.map((s) => ({ group: s.group, table: s.table }));
 }
 
 export function mapApiStage(stage: string): string {

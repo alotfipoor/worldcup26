@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy } from "lucide-react";
+import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy, Sparkles } from "lucide-react";
+import AIPredictionsTab from "@/components/admin/AIPredictionsTab";
 import { cn } from "@/lib/utils";
 import type { SideBetItem } from "@/types";
 
@@ -51,7 +52,7 @@ export default function AdminPanel({
   const [creating, setCreating] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"users" | "sidebets" | "matches">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "sidebets" | "matches" | "ai">("users");
   const [sideBets, setSideBets] = useState(initialSideBets);
   const [newQuestion, setNewQuestion] = useState("");
   const [newClosesAt, setNewClosesAt] = useState("");
@@ -258,6 +259,18 @@ export default function AdminPanel({
         >
           Matches
         </button>
+        <button
+          onClick={() => setActiveTab("ai")}
+          className={cn(
+            "px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5",
+            activeTab === "ai"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          AI Predictions
+        </button>
       </div>
 
       {/* Users tab */}
@@ -452,6 +465,9 @@ export default function AdminPanel({
           )}
         </div>
       )}
+
+      {/* AI Predictions tab */}
+      {activeTab === "ai" && <AIPredictionsTab />}
 
       {/* Side Bets tab */}
       {activeTab === "sidebets" && (
