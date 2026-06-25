@@ -39,6 +39,85 @@ function VoterList({ voters }: { voters: string[] }) {
   );
 }
 
+function AnswerReveal({ bet }: { bet: SideBetItem }) {
+  const { voterAnswers, answerType, options, correctAnswer, resolved } = bet;
+  if (!voterAnswers || voterAnswers.length === 0) return null;
+
+  if (answerType === "CHOICE") {
+    const allOptions = options ?? [...new Set(voterAnswers.map((v) => v.answer))];
+    const total = voterAnswers.length;
+    return (
+      <div className="space-y-2.5">
+        {allOptions.map((opt) => {
+          const votes = voterAnswers.filter(
+            (v) => v.answer.toLowerCase() === opt.toLowerCase()
+          );
+          const pct = total > 0 ? Math.round((votes.length / total) * 100) : 0;
+          const isCorrect = resolved && correctAnswer?.toLowerCase() === opt.toLowerCase();
+          return (
+            <div key={opt} className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className={cn(
+                  "text-xs font-medium",
+                  isCorrect ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+                )}>
+                  {opt}{isCorrect && " ✓"}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{votes.length}</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    isCorrect ? "bg-emerald-500" : "bg-primary/50"
+                  )}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              {votes.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {votes.map((v) => (
+                    <span
+                      key={v.name}
+                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground"
+                    >
+                      {v.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // TEXT type — simple name → answer list
+  return (
+    <div className="space-y-1">
+      {voterAnswers.map((v) => {
+        const isCorrect =
+          resolved &&
+          correctAnswer !== null &&
+          (v.answer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
+            correctAnswer.toLowerCase().includes(v.answer.toLowerCase()));
+        return (
+          <div key={v.name} className="flex items-center justify-between gap-2 text-xs">
+            <span className="text-muted-foreground">{v.name}</span>
+            <span className={cn(
+              "font-medium text-right",
+              isCorrect ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+            )}>
+              {v.answer}{isCorrect && " ✓"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SideBetCard({ bet: initialBet, currentUserName }: { bet: SideBetItem; currentUserName: string }) {
   const router = useRouter();
   const [bet, setBet] = useState(initialBet);
@@ -108,7 +187,11 @@ function SideBetCard({ bet: initialBet, currentUserName }: { bet: SideBetItem; c
         </div>
       )}
 
-      <VoterList voters={bet.voters} />
+      {bet.voterAnswers ? (
+        <AnswerReveal bet={bet} />
+      ) : (
+        <VoterList voters={bet.voters} />
+      )}
 
       {!bet.resolved && (
         <>

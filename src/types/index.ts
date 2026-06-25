@@ -46,4 +46,5 @@ export interface SideBetItem {
   myPointsAwarded: number | null;
   predictionCount: number;
   voters: string[]; // names of users who voted, no answers
+  voterAnswers: { name: string; answer: string }[] | null; // null while open, populated once closed
 }

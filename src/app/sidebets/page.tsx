@@ -36,6 +36,9 @@ export default async function SideBetsPage() {
       myPointsAwarded: myPred?.pointsAwarded ?? null,
       predictionCount: bet.predictions.length,
       voters: bet.predictions.map((p) => p.user.name ?? "Unknown"),
+      voterAnswers: new Date() > bet.closesAt
+        ? bet.predictions.map((p) => ({ name: p.user.name ?? "Unknown", answer: p.answer }))
+        : null,
     };
   });
 
