@@ -56,6 +56,7 @@ export default async function AdminPage() {
     myPointsAwarded: null,
     predictionCount: bet.predictions.length,
     voters: bet.predictions.map((p) => p.user.name ?? "Unknown"),
+    voterAnswers: null,
   }));
 
   return (
