@@ -70,12 +70,12 @@ export default async function RulesPage() {
         {/* Match predictions */}
         <RuleCard icon={Target} title="Match Score Predictions">
           <p className="text-xs text-muted-foreground">
-            Predict the exact score (e.g. 2–1) for up to{" "}
-            <span className="font-medium text-foreground">6 points</span>, or
-            just pick a winner for up to{" "}
-            <span className="font-medium text-foreground">2 points</span>.
+            Predict the exact score (e.g. 2–1) for maximum points, or just
+            pick a winner for partial credit. Points are higher in the knockout
+            stage to keep things exciting!
           </p>
 
+          <p className="text-xs font-semibold text-foreground">Group Stage</p>
           <div className="rounded-xl border border-border overflow-hidden">
             <ScoreRow
               pts={6}
@@ -103,6 +103,34 @@ export default async function RulesPage() {
             />
           </div>
 
+          <p className="text-xs font-semibold text-foreground">Knockout Stage</p>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <ScoreRow
+              pts={7}
+              color="bg-green-100 text-green-700"
+              label="Exact score"
+              example="You predicted 2–1, actual result was 2–1"
+            />
+            <ScoreRow
+              pts={5}
+              color="bg-blue-100 text-blue-700"
+              label="Right winner + correct goal difference"
+              example="You predicted 2–0 (diff +2), actual was 3–1 (diff +2) — same winner, same margin"
+            />
+            <ScoreRow
+              pts={3}
+              color="bg-amber-100 text-amber-700"
+              label="Right winner only"
+              example="You predicted a home win but wrong score and wrong goal diff — or used the winner-only pick"
+            />
+            <ScoreRow
+              pts={0}
+              color="bg-red-100 text-red-700"
+              label="Wrong"
+              example="Predicted the wrong winner (or a draw that didn't happen)"
+            />
+          </div>
+
           <div className="bg-muted/40 rounded-xl p-3 text-xs text-muted-foreground space-y-1">
             <p className="font-medium text-foreground text-[11px] uppercase tracking-wide mb-1.5">
               Goal difference explained
@@ -117,7 +145,7 @@ export default async function RulesPage() {
             </p>
             <p>
               Both of the first two have the same winner and same diff, so a 2–0
-              prediction scores <strong>4 pts</strong> when the result is 3–1.
+              prediction scores <strong>4 pts</strong> (group) or <strong>5 pts</strong> (knockout) when the result is 3–1.
             </p>
           </div>
         </RuleCard>
@@ -125,8 +153,7 @@ export default async function RulesPage() {
         {/* Tournament predictions */}
         <RuleCard icon={Trophy} title="Tournament Predictions">
           <p className="text-xs text-muted-foreground">
-            Predict who wins the tournament and who scores the most goals. Each
-            correct pick earns <span className="font-medium text-foreground">15 points</span>.
+            Predict the champion, top scorer, top assist provider, and best goalkeeper. Locked as of today — no more changes.
           </p>
 
           <div className="rounded-xl border border-border overflow-hidden">
@@ -137,23 +164,23 @@ export default async function RulesPage() {
               example="You predicted Argentina and they won the tournament"
             />
             <ScoreRow
-              pts={15}
-              color="bg-purple-100 text-purple-700"
+              pts={10}
+              color="bg-indigo-100 text-indigo-700"
               label="Correct Golden Boot (top scorer)"
-              example="You predicted Messi and he finished as top scorer"
+              example="You predicted Messi and he finished as the tournament's top scorer"
             />
-          </div>
-
-          <div className="bg-muted/40 rounded-xl p-3 text-xs space-y-1">
-            <p>
-              <span className="font-medium">When can I change my pick?</span>
-            </p>
-            <p className="text-muted-foreground">
-              You can update your tournament predictions freely during the group
-              stage. Once all group matches are finished, you get one final
-              chance to update before the Round of 16 kicks off. After that,
-              predictions are locked.
-            </p>
+            <ScoreRow
+              pts={10}
+              color="bg-indigo-100 text-indigo-700"
+              label="Correct Top Assist"
+              example="You predicted Di María and he finished with the most assists"
+            />
+            <ScoreRow
+              pts={10}
+              color="bg-indigo-100 text-indigo-700"
+              label="Correct Best Goalkeeper"
+              example="You predicted Martínez and he won the Golden Glove"
+            />
           </div>
         </RuleCard>
 
@@ -181,23 +208,57 @@ export default async function RulesPage() {
 
         {/* Quick summary */}
         <RuleCard icon={Zap} title="Quick Summary">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {[
-              { label: "Exact score", pts: "6 pts", color: "text-green-700" },
-              { label: "Winner + goal diff", pts: "4 pts", color: "text-blue-700" },
-              { label: "Right winner", pts: "2 pts", color: "text-amber-700" },
-              { label: "Wrong", pts: "0 pts", color: "text-red-600" },
-              { label: "Correct champion", pts: "15 pts", color: "text-purple-700" },
-              { label: "Correct top scorer", pts: "15 pts", color: "text-purple-700" },
-            ].map(({ label, pts, color }) => (
-              <div
-                key={label}
-                className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2"
-              >
-                <span className="text-muted-foreground">{label}</span>
-                <span className={`font-bold ${color}`}>{pts}</span>
-              </div>
-            ))}
+          <div className="space-y-2 text-xs">
+            <p className="font-semibold text-foreground">Group Stage</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Exact score", pts: "6 pts", color: "text-green-700" },
+                { label: "Winner + goal diff", pts: "4 pts", color: "text-blue-700" },
+                { label: "Right winner", pts: "2 pts", color: "text-amber-700" },
+                { label: "Wrong", pts: "0 pts", color: "text-red-600" },
+              ].map(({ label, pts, color }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2"
+                >
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className={`font-bold ${color}`}>{pts}</span>
+                </div>
+              ))}
+            </div>
+            <p className="font-semibold text-foreground pt-1">Knockout Stage</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Exact score", pts: "7 pts", color: "text-green-700" },
+                { label: "Winner + goal diff", pts: "5 pts", color: "text-blue-700" },
+                { label: "Right winner", pts: "3 pts", color: "text-amber-700" },
+                { label: "Wrong", pts: "0 pts", color: "text-red-600" },
+              ].map(({ label, pts, color }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2"
+                >
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className={`font-bold ${color}`}>{pts}</span>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              {[
+                { label: "Correct champion", pts: "15 pts", color: "text-purple-700" },
+                { label: "Correct top scorer", pts: "10 pts", color: "text-indigo-700" },
+                { label: "Correct top assist", pts: "10 pts", color: "text-indigo-700" },
+                { label: "Correct goalkeeper", pts: "10 pts", color: "text-indigo-700" },
+              ].map(({ label, pts, color }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2"
+                >
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className={`font-bold ${color}`}>{pts}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </RuleCard>
 

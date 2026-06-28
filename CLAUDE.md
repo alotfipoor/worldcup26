@@ -27,14 +27,25 @@ Copy `.env.example` → `.env` and fill in:
 - No email/password, no signup page
 
 ## Scoring
-- Exact score (both goals right): 6 pts
-- Right winner + goals entered but wrong: 4 pts
-- Right winner, no goals entered (winner-only pick): 2 pts
-- Tournament champion correct: 15 pts
-- Golden Boot correct: 15 pts
+Group stage:
+- Exact score: 6 pts
+- Right winner + correct goal diff: 4 pts
+- Right winner only: 2 pts
+
+Knockout stage (R32 onwards):
+- Exact score: 7 pts
+- Right winner + correct goal diff: 5 pts
+- Right winner only: 3 pts
+
+Tournament predictions:
+- Correct champion: 15 pts
+- Correct Golden Boot (top scorer): 10 pts
+- Correct top assist: 10 pts
+- Correct best goalkeeper: 10 pts
 
 ## Prediction lock
-Predictions lock **24 hours before kickoff** (not at kickoff).
+Match predictions lock **at kickoff**.
+Tournament predictions locked at 2026-06-28T20:00:00Z (before knockout stage).
 
 ## Prediction privacy
 Users cannot see other players' predictions until a match is finished and scored.

@@ -14,6 +14,7 @@ async function getTournamentWindow(): Promise<"INITIAL" | "POST_GROUP"> {
 }
 
 async function isTournamentLocked(): Promise<boolean> {
+  if (new Date() >= new Date("2026-06-28T20:00:00Z")) return true;
   const r16 = await prisma.match.count({
     where: {
       stage: { in: ["ROUND_OF_32", "ROUND_OF_16"] },

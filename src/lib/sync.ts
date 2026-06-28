@@ -152,6 +152,7 @@ export async function scoreUnscoredPredictions(): Promise<number> {
       const result = calculateMatchPoints(prediction, {
         homeScore: match.homeScore!,
         awayScore: match.awayScore!,
+        stage: match.stage,
       });
 
       await prisma.prediction.update({
