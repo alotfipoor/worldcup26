@@ -25,6 +25,7 @@ interface AiPred {
     elo: boolean;
     news: boolean;
     weather: boolean;
+    wcResults: boolean;
   };
   generatedAt: string;
 }
@@ -134,7 +135,7 @@ export default function AIPredictionsTab() {
           AI Match Predictions
         </h2>
         <p className="text-xs text-muted-foreground">
-          Powered by Gemini 2.5 Pro — uses Elo ratings, tournament standings, news, and weather to predict each match.
+          Powered by Gemini 3.1 Pro Preview — uses Elo ratings, tournament standings, form, news, and weather to predict each match.
         </p>
       </div>
 
@@ -339,6 +340,7 @@ export default function AIPredictionsTab() {
                       <span className="flex gap-1.5 flex-wrap">
                         <span className={pred.dataSourcesUsed.standings ? "text-emerald-500" : "opacity-30"}>standings</span>
                         <span className={pred.dataSourcesUsed.elo ? "text-emerald-500" : "opacity-30"}>elo</span>
+                        <span className={pred.dataSourcesUsed.wcResults ? "text-emerald-500" : "opacity-30"}>form</span>
                         <span className={pred.dataSourcesUsed.news ? "text-emerald-500" : "opacity-30"}>news</span>
                         <span className={pred.dataSourcesUsed.weather ? "text-emerald-500" : "opacity-30"}>weather</span>
                       </span>

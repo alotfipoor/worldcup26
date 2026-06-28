@@ -82,6 +82,7 @@ export interface AiPredictionResult {
     elo: boolean;
     news: boolean;
     weather: boolean;
+    wcResults: boolean;
   };
 }
 
@@ -387,6 +388,7 @@ export async function generateAiPrediction(matchId: string): Promise<AiPredictio
     elo: !!(elo.home || elo.away),
     news: news.length > 0,
     weather: !!weather,
+    wcResults: wcResults.length > 0,
   };
 
   const prompt = buildPrompt(
