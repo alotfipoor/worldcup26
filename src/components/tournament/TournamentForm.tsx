@@ -152,19 +152,6 @@ export default function TournamentForm({
 
   return (
     <div className="space-y-6">
-      {/* Prior window summary */}
-      {window === "POST_GROUP" && initialPrediction && (
-        <div className="bg-muted/50 rounded-xl p-3 text-sm space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Your initial prediction
-          </p>
-          <p>Champion: {initialPrediction.champion ?? "–"}</p>
-          <p>Top scorer: {initialPrediction.topScorer ?? "–"}</p>
-          <p>Top assists: {initialPrediction.topAssist ?? "–"}</p>
-          <p>Best goalkeeper: {initialPrediction.bestGoalkeeper ?? "–"}</p>
-        </div>
-      )}
-
       {/* Champion picker */}
       <div className="space-y-3">
         <Label className="text-base font-semibold">
