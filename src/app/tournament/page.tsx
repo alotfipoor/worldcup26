@@ -54,8 +54,7 @@ export default async function TournamentPage() {
 
         {window === "POST_GROUP" && !locked && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-            <strong>Group stage is over!</strong> You can now update your prediction
-            before the knockout rounds begin.
+            <strong>Group stage is over!</strong> Update your prediction before it locks at 20:00 UTC today.
           </div>
         )}
 

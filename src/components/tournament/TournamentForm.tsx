@@ -75,10 +75,13 @@ export default function TournamentForm({
   const activePrediction =
     window === "POST_GROUP" ? postGroupPrediction : initialPrediction;
 
-  const [champion, setChampion] = useState(activePrediction?.champion ?? "");
-  const [topScorer, setTopScorer] = useState(activePrediction?.topScorer ?? "");
-  const [topAssist, setTopAssist] = useState(activePrediction?.topAssist ?? "");
-  const [bestGoalkeeper, setBestGoalkeeper] = useState(activePrediction?.bestGoalkeeper ?? "");
+  // For POST_GROUP, fall back to initial prediction values so users don't start from scratch
+  const fallback = window === "POST_GROUP" && !postGroupPrediction ? initialPrediction : null;
+
+  const [champion, setChampion] = useState(activePrediction?.champion ?? fallback?.champion ?? "");
+  const [topScorer, setTopScorer] = useState(activePrediction?.topScorer ?? fallback?.topScorer ?? "");
+  const [topAssist, setTopAssist] = useState(activePrediction?.topAssist ?? fallback?.topAssist ?? "");
+  const [bestGoalkeeper, setBestGoalkeeper] = useState(activePrediction?.bestGoalkeeper ?? fallback?.bestGoalkeeper ?? "");
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -252,7 +255,7 @@ export default function TournamentForm({
         Champion: 15 pts · Top scorer, assists, goalkeeper: 10 pts each
         {window === "INITIAL"
           ? " · Can update after group stage"
-          : " · Locks when knockouts begin"}
+          : " · Locks at 20:00 UTC today"}
       </p>
     </div>
   );

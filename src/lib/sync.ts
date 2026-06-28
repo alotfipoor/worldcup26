@@ -56,8 +56,11 @@ export async function syncMatches(): Promise<{ synced: number; scored: number }>
 
     const stage = mapApiStage(m.stage) as Stage;
     let status = mapApiStatus(m.status) as MatchStatus;
-    let homeScore = m.score.fullTime.home;
-    let awayScore = m.score.fullTime.away;
+    // Use extraTime score for ET/penalty matches so draws-after-penalties score correctly
+    const et = m.score.extraTime;
+    const usesExtraTime = et && (et.home !== null || et.away !== null);
+    let homeScore = usesExtraTime ? et.home : m.score.fullTime.home;
+    let awayScore = usesExtraTime ? et.away : m.score.fullTime.away;
     let goals = m.goals;
 
     // The competition list endpoint never includes the goals array, and

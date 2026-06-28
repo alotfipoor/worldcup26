@@ -24,8 +24,11 @@ export interface ApiStanding {
 
 interface ApiScore {
   winner: string | null;
+  duration?: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT" | null;
   fullTime: { home: number | null; away: number | null };
   halfTime: { home: number | null; away: number | null };
+  extraTime?: { home: number | null; away: number | null } | null;
+  penalties?: { home: number | null; away: number | null } | null;
 }
 
 export interface ApiGoal {
