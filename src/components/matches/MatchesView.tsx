@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MatchCard from "./MatchCard";
+import KnockoutBracket from "./KnockoutBracket";
 import { cn } from "@/lib/utils";
 import { TEAM_TO_FLAG_CODE } from "@/lib/constants";
 import type { Match, Prediction } from "@prisma/client";
@@ -212,6 +213,8 @@ export default function MatchesView({ groups, knockout, lastSync, hasMatches }: 
     defaultKnockoutStage
   );
 
+  const [knockoutView, setKnockoutView] = useState<"list" | "bracket">("list");
+
   if (!hasMatches) {
     return (
       <div className="text-center py-16 text-muted-foreground">
@@ -365,69 +368,103 @@ export default function MatchesView({ groups, knockout, lastSync, hasMatches }: 
             </div>
           ) : (
             <>
-              {/* Stage selector — acts as a bracket navigator */}
-              <div className="flex flex-wrap gap-1.5 mb-5">
-                {knockout.map((section) => {
-                  const isActive = activeKnockoutStage === section.stage;
-                  const isLive = section.matches.some((m) => m.status === "LIVE");
-                  const allDone = section.matches.every((m) => TERMINAL.has(m.status));
-                  const unpredicted = section.matches.filter(
-                    (m) => !m.userPrediction && m.status === "SCHEDULED"
-                  ).length;
-                  return (
-                    <button
-                      key={section.stage}
-                      onClick={() => setActiveKnockoutStage(section.stage)}
-                      className={cn(
-                        "relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : isLive
-                          ? "bg-red-500/15 text-red-500 ring-1 ring-red-500/30"
-                          : allDone
-                          ? "bg-muted/50 text-muted-foreground/50"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {STAGE_SHORT[section.stage] ?? section.label}
-                      {!isActive && isLive && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                      )}
-                      {!isActive && !isLive && unpredicted > 0 && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
-                      )}
-                    </button>
-                  );
-                })}
+              {/* View toggle: Matches list vs full bracket */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-1 p-0.5 bg-muted rounded-xl">
+                  <button
+                    onClick={() => setKnockoutView("list")}
+                    className={cn(
+                      "px-3 py-1 rounded-lg text-xs font-semibold transition-colors",
+                      knockoutView === "list"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Matches
+                  </button>
+                  <button
+                    onClick={() => setKnockoutView("bracket")}
+                    className={cn(
+                      "px-3 py-1 rounded-lg text-xs font-semibold transition-colors",
+                      knockoutView === "bracket"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Bracket
+                  </button>
+                </div>
               </div>
 
-              {/* Matches for selected stage */}
-              {knockout
-                .filter((s) => s.stage === activeKnockoutStage)
-                .map((section) => {
-                  const unpredicted = section.matches.filter(
-                    (m) => !m.userPrediction && m.status === "SCHEDULED"
-                  ).length;
-                  return (
-                    <section key={section.stage}>
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                          {section.label}
-                        </h2>
-                        <UnpredictedBadge count={unpredicted} />
-                      </div>
-                      <div className="space-y-2">
-                        {section.matches.map((m) => (
-                          <MatchCard
-                            key={m.id}
-                            match={m as unknown as Match}
-                            prediction={m.userPrediction as unknown as Prediction | null}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })}
+              {knockoutView === "bracket" ? (
+                <KnockoutBracket knockout={knockout} />
+              ) : (
+                <>
+                  {/* Stage selector */}
+                  <div className="flex flex-wrap gap-1.5 mb-5">
+                    {knockout.map((section) => {
+                      const isActive = activeKnockoutStage === section.stage;
+                      const isLive = section.matches.some((m) => m.status === "LIVE");
+                      const allDone = section.matches.every((m) => TERMINAL.has(m.status));
+                      const unpredicted = section.matches.filter(
+                        (m) => !m.userPrediction && m.status === "SCHEDULED"
+                      ).length;
+                      return (
+                        <button
+                          key={section.stage}
+                          onClick={() => setActiveKnockoutStage(section.stage)}
+                          className={cn(
+                            "relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors",
+                            isActive
+                              ? "bg-primary text-primary-foreground"
+                              : isLive
+                              ? "bg-red-500/15 text-red-500 ring-1 ring-red-500/30"
+                              : allDone
+                              ? "bg-muted/50 text-muted-foreground/50"
+                              : "bg-muted text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {STAGE_SHORT[section.stage] ?? section.label}
+                          {!isActive && isLive && (
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                          )}
+                          {!isActive && !isLive && unpredicted > 0 && (
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Matches for selected stage */}
+                  {knockout
+                    .filter((s) => s.stage === activeKnockoutStage)
+                    .map((section) => {
+                      const unpredicted = section.matches.filter(
+                        (m) => !m.userPrediction && m.status === "SCHEDULED"
+                      ).length;
+                      return (
+                        <section key={section.stage}>
+                          <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                              {section.label}
+                            </h2>
+                            <UnpredictedBadge count={unpredicted} />
+                          </div>
+                          <div className="space-y-2">
+                            {section.matches.map((m) => (
+                              <MatchCard
+                                key={m.id}
+                                match={m as unknown as Match}
+                                prediction={m.userPrediction as unknown as Prediction | null}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      );
+                    })}
+                </>
+              )}
             </>
           )}
         </div>
