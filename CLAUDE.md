@@ -45,7 +45,7 @@ Tournament predictions:
 
 ## Prediction lock
 Match predictions lock **at kickoff**.
-Tournament predictions locked at 2026-06-29T20:00:00Z (before knockout stage).
+Tournament predictions locked at 2026-06-29T17:00:00Z / 18:00 BST (before knockout stage).
 
 ## Prediction privacy
 Users cannot see other players' predictions until a match is finished and scored.
