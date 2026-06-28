@@ -175,13 +175,21 @@ interface MatchesViewProps {
   hasMatches: boolean;
 }
 
-export default function MatchesView({ groups, knockout, lastSync, hasMatches }: MatchesViewProps) {
-  const allGroupsDone =
-    groups.length > 0 &&
-    groups.every((g) => g.matches.every((m) => m.status === "FINISHED"));
+const STAGE_SHORT: Record<string, string> = {
+  ROUND_OF_32: "R32",
+  ROUND_OF_16: "R16",
+  QUARTER_FINAL: "QF",
+  SEMI_FINAL: "SF",
+  THIRD_PLACE: "3rd",
+  FINAL: "Final",
+};
 
+const TERMINAL = new Set(["FINISHED", "CANCELLED", "POSTPONED"]);
+
+export default function MatchesView({ groups, knockout, lastSync, hasMatches }: MatchesViewProps) {
+  // Default to knockout whenever knockout matches exist; otherwise group stage.
   const [tab, setTab] = useState<"group" | "knockout">(
-    allGroupsDone && knockout.length > 0 ? "knockout" : "group"
+    knockout.length > 0 ? "knockout" : "group"
   );
 
   // Default to first group with live/scheduled games, else first group, else null (All)
@@ -192,6 +200,17 @@ export default function MatchesView({ groups, knockout, lastSync, hasMatches }: 
     null;
 
   const [activeGroup, setActiveGroup] = useState<string | null>(defaultLetter);
+
+  // Default knockout stage: first with a LIVE match, then first with SCHEDULED, then first overall
+  const defaultKnockoutStage =
+    knockout.find((s) => s.matches.some((m) => m.status === "LIVE"))?.stage ??
+    knockout.find((s) => s.matches.some((m) => m.status === "SCHEDULED"))?.stage ??
+    knockout[0]?.stage ??
+    null;
+
+  const [activeKnockoutStage, setActiveKnockoutStage] = useState<string | null>(
+    defaultKnockoutStage
+  );
 
   if (!hasMatches) {
     return (
@@ -338,37 +357,78 @@ export default function MatchesView({ groups, knockout, lastSync, hasMatches }: 
 
       {/* ── Knockout ── */}
       {tab === "knockout" && (
-        <div className="space-y-6">
+        <div>
           {knockout.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p className="text-3xl mb-2">🏆</p>
               <p className="text-sm">Knockout stage hasn&apos;t started yet</p>
             </div>
           ) : (
-            knockout.map((section) => {
-              const unpredicted = section.matches.filter(
-                (m) => !m.userPrediction && m.status === "SCHEDULED"
-              ).length;
-              return (
-                <section key={section.stage}>
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      {section.label}
-                    </h2>
-                    <UnpredictedBadge count={unpredicted} />
-                  </div>
-                  <div className="space-y-2">
-                    {section.matches.map((m) => (
-                      <MatchCard
-                        key={m.id}
-                        match={m as unknown as Match}
-                        prediction={m.userPrediction as unknown as Prediction | null}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })
+            <>
+              {/* Stage selector — acts as a bracket navigator */}
+              <div className="flex flex-wrap gap-1.5 mb-5">
+                {knockout.map((section) => {
+                  const isActive = activeKnockoutStage === section.stage;
+                  const isLive = section.matches.some((m) => m.status === "LIVE");
+                  const allDone = section.matches.every((m) => TERMINAL.has(m.status));
+                  const unpredicted = section.matches.filter(
+                    (m) => !m.userPrediction && m.status === "SCHEDULED"
+                  ).length;
+                  return (
+                    <button
+                      key={section.stage}
+                      onClick={() => setActiveKnockoutStage(section.stage)}
+                      className={cn(
+                        "relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : isLive
+                          ? "bg-red-500/15 text-red-500 ring-1 ring-red-500/30"
+                          : allDone
+                          ? "bg-muted/50 text-muted-foreground/50"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {STAGE_SHORT[section.stage] ?? section.label}
+                      {!isActive && isLive && (
+                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      )}
+                      {!isActive && !isLive && unpredicted > 0 && (
+                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Matches for selected stage */}
+              {knockout
+                .filter((s) => s.stage === activeKnockoutStage)
+                .map((section) => {
+                  const unpredicted = section.matches.filter(
+                    (m) => !m.userPrediction && m.status === "SCHEDULED"
+                  ).length;
+                  return (
+                    <section key={section.stage}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                          {section.label}
+                        </h2>
+                        <UnpredictedBadge count={unpredicted} />
+                      </div>
+                      <div className="space-y-2">
+                        {section.matches.map((m) => (
+                          <MatchCard
+                            key={m.id}
+                            match={m as unknown as Match}
+                            prediction={m.userPrediction as unknown as Prediction | null}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+            </>
           )}
         </div>
       )}

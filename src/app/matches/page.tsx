@@ -134,7 +134,9 @@ export default async function MatchesPage() {
   }, null);
 
   // ── Group Stage: bucket by group name, sort groups A → L ──
-  const groupMatches = serialized.filter((m) => m.stage === "GROUP");
+  // Exclude matches without a groupName (can happen with some API data) so they
+  // don't appear as a spurious "ungrouped" section once the knockout stage begins.
+  const groupMatches = serialized.filter((m) => m.stage === "GROUP" && m.groupName !== null);
   const groupBuckets = new Map<string, ClientMatch[]>();
   for (const m of groupMatches) {
     const key = m.groupName ?? "__ungrouped";
