@@ -24,6 +24,7 @@ export default function PredictionForm({
   matchId,
   homeTeam,
   awayTeam,
+  isKnockout,
   lockTime,
   initialPrediction,
 }: PredictionFormProps) {
