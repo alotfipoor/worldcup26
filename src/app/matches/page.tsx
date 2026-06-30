@@ -6,6 +6,7 @@ import MatchesView from "@/components/matches/MatchesView";
 import AutoRefresh from "@/components/AutoRefresh";
 import { STAGE_LABELS, STAGE_ORDER, formatGroupName } from "@/lib/constants";
 import { maybeTriggerBackgroundSync } from "@/lib/sync";
+import { R32_BRACKET_ORDER } from "@/lib/bracket";
 import type { Match, Prediction } from "@prisma/client";
 import type {
   ClientMatch,
@@ -47,7 +48,15 @@ function serializeMatch(m: Match & { userPrediction: Prediction | null }): Clien
   };
 }
 
-function computeStandings(groupMatches: ClientMatch[]): TeamStanding[] {
+interface StandingsMatchInput {
+  homeTeam: string;
+  awayTeam: string;
+  status: string;
+  homeScore: number | null;
+  awayScore: number | null;
+}
+
+function computeStandings(groupMatches: StandingsMatchInput[]): TeamStanding[] {
   const teams = new Map<string, TeamStanding>();
 
   // Seed every team from every match (including scheduled games)
@@ -109,15 +118,53 @@ function computeStandings(groupMatches: ClientMatch[]): TeamStanding[] {
   );
 }
 
+// Maps each Round of 32 team to its bracket slot (0-15) so KnockoutBracket can
+// position later rounds correctly instead of guessing from kickoff order.
+async function getTeamBracketSlots(): Promise<Record<string, number>> {
+  const [groupMatches, r32Matches] = await Promise.all([
+    prisma.match.findMany({ where: { stage: "GROUP", groupName: { not: null } } }),
+    prisma.match.findMany({ where: { stage: "ROUND_OF_32" } }),
+  ]);
+  if (r32Matches.length === 0) return {};
+
+  const byGroup = new Map<string, Match[]>();
+  for (const m of groupMatches) {
+    if (!byGroup.has(m.groupName!)) byGroup.set(m.groupName!, []);
+    byGroup.get(m.groupName!)!.push(m);
+  }
+
+  const labelToTeam: Record<string, string> = {};
+  for (const [groupName, gms] of byGroup) {
+    const letter = groupName.replace("GROUP_", "");
+    const table = computeStandings(gms);
+    if (table[0]) labelToTeam[`1${letter}`] = table[0].team;
+    if (table[1]) labelToTeam[`2${letter}`] = table[1].team;
+  }
+
+  const teamToSlot: Record<string, number> = {};
+  for (const m of r32Matches) {
+    const slotIndex = R32_BRACKET_ORDER.findIndex(
+      ([a, b]) =>
+        [labelToTeam[a], labelToTeam[b]].includes(m.homeTeam) ||
+        [labelToTeam[a], labelToTeam[b]].includes(m.awayTeam)
+    );
+    if (slotIndex === -1) continue;
+    teamToSlot[m.homeTeam] = slotIndex;
+    teamToSlot[m.awayTeam] = slotIndex;
+  }
+  return teamToSlot;
+}
+
 export default async function MatchesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
   maybeTriggerBackgroundSync();
 
-  const [matches, predictions] = await Promise.all([
+  const [matches, predictions, teamToSlot] = await Promise.all([
     prisma.match.findMany({ orderBy: { kickoff: "asc" } }),
     prisma.prediction.findMany({ where: { userId: session.userId } }),
+    getTeamBracketSlots(),
   ]);
 
   const predMap = new Map(predictions.map((p) => [p.matchId, p]));
@@ -176,6 +223,7 @@ export default async function MatchesPage() {
       <MatchesView
         groups={groups}
         knockout={knockout}
+        teamToSlot={teamToSlot}
         lastSync={lastSync?.toISOString() ?? null}
         hasMatches={serialized.length > 0}
       />

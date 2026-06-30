@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { TEAM_TO_FLAG_CODE } from "@/lib/constants";
+import { bracketSlotForMatch } from "@/lib/bracket";
 import type { ClientMatch, KnockoutSection } from "./MatchesView";
 import * as CountryFlags from "country-flag-icons/react/3x2";
 
@@ -155,10 +156,19 @@ function ColumnConnector({ fromCount, colIndex }: { fromCount: number; colIndex:
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function sortedMatches(knockout: KnockoutSection[], stage: string): ClientMatch[] {
-  return [...(knockout.find((s) => s.stage === stage)?.matches ?? [])].sort(
-    (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime(),
-  );
+function sortedMatches(
+  knockout: KnockoutSection[],
+  stage: string,
+  teamToSlot: Record<string, number>,
+): ClientMatch[] {
+  const matches = knockout.find((s) => s.stage === stage)?.matches ?? [];
+  return [...matches].sort((a, b) => {
+    const slotA = bracketSlotForMatch(a, teamToSlot);
+    const slotB = bracketSlotForMatch(b, teamToSlot);
+    if (slotA !== null && slotB !== null && slotA !== slotB) return slotA - slotB;
+    // Fall back to kickoff order when a slot can't be resolved yet (e.g. group stage in progress).
+    return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+  });
 }
 
 function padded(arr: ClientMatch[], len: number): (ClientMatch | null)[] {
@@ -169,8 +179,14 @@ function padded(arr: ClientMatch[], len: number): (ClientMatch | null)[] {
 
 // ─── Main bracket component ──────────────────────────────────────────────────
 
-export default function KnockoutBracket({ knockout }: { knockout: KnockoutSection[] }) {
-  const thirdPlace = sortedMatches(knockout, "THIRD_PLACE")[0] ?? null;
+export default function KnockoutBracket({
+  knockout,
+  teamToSlot,
+}: {
+  knockout: KnockoutSection[];
+  teamToSlot: Record<string, number>;
+}) {
+  const thirdPlace = sortedMatches(knockout, "THIRD_PLACE", teamToSlot)[0] ?? null;
   const totalW = ROUNDS.length * COL_STRIDE - COL_GAP;
 
   return (
@@ -192,7 +208,7 @@ export default function KnockoutBracket({ knockout }: { knockout: KnockoutSectio
       <div style={{ position: "relative", width: totalW, minWidth: totalW, height: BRACKET_H }}>
         {/* Match cards */}
         {ROUNDS.map((round, colIdx) => {
-          const matches = padded(sortedMatches(knockout, round.stage), round.count);
+          const matches = padded(sortedMatches(knockout, round.stage, teamToSlot), round.count);
           const slotsPerMatch = Math.pow(2, colIdx);
           const slotH = slotsPerMatch * SLOT;
           return matches.map((m, matchIdx) => (

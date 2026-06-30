@@ -172,6 +172,7 @@ function UnpredictedBadge({ count }: { count: number }) {
 interface MatchesViewProps {
   groups: GroupData[];
   knockout: KnockoutSection[];
+  teamToSlot: Record<string, number>;
   lastSync: string | null;
   hasMatches: boolean;
 }
@@ -187,7 +188,7 @@ const STAGE_SHORT: Record<string, string> = {
 
 const TERMINAL = new Set(["FINISHED", "CANCELLED", "POSTPONED"]);
 
-export default function MatchesView({ groups, knockout, lastSync, hasMatches }: MatchesViewProps) {
+export default function MatchesView({ groups, knockout, teamToSlot, lastSync, hasMatches }: MatchesViewProps) {
   // Default to knockout whenever knockout matches exist; otherwise group stage.
   const [tab, setTab] = useState<"group" | "knockout">(
     knockout.length > 0 ? "knockout" : "group"
@@ -397,7 +398,7 @@ export default function MatchesView({ groups, knockout, lastSync, hasMatches }: 
               </div>
 
               {knockoutView === "bracket" ? (
-                <KnockoutBracket knockout={knockout} />
+                <KnockoutBracket knockout={knockout} teamToSlot={teamToSlot} />
               ) : (
                 <>
                   {/* Stage selector */}
