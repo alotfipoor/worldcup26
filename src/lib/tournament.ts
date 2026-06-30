@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { WC2026_PLAYERS } from "@/lib/constants";
 
 export type TournamentWindow = "INITIAL" | "POST_GROUP";
 
@@ -37,6 +38,46 @@ export interface TournamentStats {
 
 type Field = "champion" | "topScorer" | "topAssist" | "bestGoalkeeper";
 
+function stripAccents(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+function normalizeName(s: string): string {
+  return stripAccents(s).toLowerCase().trim();
+}
+
+// Maps both full names and unique surnames (accent/case-insensitive) to the
+// canonical roster spelling, so "Messi" and "Mbappe" merge with "Lionel Messi"
+// and "Kylian Mbappé". Surnames shared by multiple roster players (e.g.
+// "Martinez") are left out — guessing which one was meant would be worse than
+// just not merging.
+function buildPlayerAliasMap(): Map<string, string> {
+  const alias = new Map<string, string>();
+  const surnameOwners = new Map<string, Set<string>>();
+
+  for (const player of WC2026_PLAYERS) {
+    alias.set(normalizeName(player), player);
+    const parts = player.split(" ");
+    const surnameKey = normalizeName(parts[parts.length - 1]);
+    if (!surnameOwners.has(surnameKey)) surnameOwners.set(surnameKey, new Set());
+    surnameOwners.get(surnameKey)!.add(player);
+  }
+
+  for (const [surnameKey, owners] of surnameOwners) {
+    if (owners.size === 1 && !alias.has(surnameKey)) {
+      alias.set(surnameKey, [...owners][0]);
+    }
+  }
+
+  return alias;
+}
+
+const PLAYER_ALIASES = buildPlayerAliasMap();
+
+function resolvePlayerName(raw: string): string {
+  return PLAYER_ALIASES.get(normalizeName(raw)) ?? raw.trim();
+}
+
 export async function getTournamentStats(): Promise<TournamentStats> {
   const predictions = await prisma.tournamentPrediction.findMany({
     include: { user: { select: { id: true, name: true } } },
@@ -52,19 +93,23 @@ export async function getTournamentStats(): Promise<TournamentStats> {
   }
   const rows = [...latestByUser.values()];
 
-  function groupField(field: Field): TournamentVoteGroup[] {
+  function groupField(
+    field: Field,
+    resolveLabel: (raw: string) => string = (raw) => raw.trim()
+  ): TournamentVoteGroup[] {
     const groups = new Map<string, TournamentVoteGroup>();
     for (const row of rows) {
       const raw = row[field];
       if (!raw || !raw.trim()) continue;
-      const key = raw.trim().toLowerCase();
+      const label = resolveLabel(raw);
+      const key = label.toLowerCase();
       const existing = groups.get(key);
       if (existing) {
         existing.count++;
         existing.voters.push({ userId: row.userId, userName: row.user.name ?? "Unknown" });
       } else {
         groups.set(key, {
-          label: raw.trim(),
+          label,
           count: 1,
           voters: [{ userId: row.userId, userName: row.user.name ?? "Unknown" }],
         });
@@ -76,8 +121,8 @@ export async function getTournamentStats(): Promise<TournamentStats> {
   return {
     totalRespondents: rows.length,
     champion: groupField("champion"),
-    topScorer: groupField("topScorer"),
-    topAssist: groupField("topAssist"),
-    bestGoalkeeper: groupField("bestGoalkeeper"),
+    topScorer: groupField("topScorer", resolvePlayerName),
+    topAssist: groupField("topAssist", resolvePlayerName),
+    bestGoalkeeper: groupField("bestGoalkeeper", resolvePlayerName),
   };
 }
