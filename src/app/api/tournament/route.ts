@@ -1,25 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-
-async function getTournamentWindow(): Promise<"INITIAL" | "POST_GROUP"> {
-  const pendingGroupMatches = await prisma.match.count({
-    where: { stage: "GROUP", status: { not: "FINISHED" } },
-  });
-  return pendingGroupMatches === 0 ? "POST_GROUP" : "INITIAL";
-}
-
-async function isTournamentLocked(): Promise<boolean> {
-  // Extended deadline: keep unlocked until 2026-06-30 18:00 BST (17:00 UTC)
-  if (new Date() < new Date("2026-06-30T17:00:00Z")) return false;
-  const r16Count = await prisma.match.count({
-    where: {
-      stage: { in: ["ROUND_OF_32", "ROUND_OF_16"] },
-      status: { in: ["LIVE", "FINISHED"] },
-    },
-  });
-  return r16Count > 0;
-}
+import { getTournamentWindow, isTournamentLocked } from "@/lib/tournament";
 
 export async function GET() {
   const session = await getSession();

@@ -2,28 +2,11 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import TournamentForm from "@/components/tournament/TournamentForm";
+import TournamentStatsCharts from "@/components/tournament/TournamentStatsCharts";
 import { prisma } from "@/lib/prisma";
+import { getTournamentWindow, isTournamentLocked, getTournamentStats } from "@/lib/tournament";
 
 export const revalidate = 0;
-
-async function getTournamentWindow(): Promise<"INITIAL" | "POST_GROUP"> {
-  const pendingGroup = await prisma.match.count({
-    where: { stage: "GROUP", status: { not: "FINISHED" } },
-  });
-  return pendingGroup === 0 ? "POST_GROUP" : "INITIAL";
-}
-
-async function isTournamentLocked(): Promise<boolean> {
-  // Extended deadline: keep unlocked until 2026-06-30 18:00 BST (17:00 UTC)
-  if (new Date() < new Date("2026-06-30T17:00:00Z")) return false;
-  const r16 = await prisma.match.count({
-    where: {
-      stage: { in: ["ROUND_OF_32", "ROUND_OF_16"] },
-      status: { in: ["LIVE", "FINISHED"] },
-    },
-  });
-  return r16 > 0;
-}
 
 export default async function TournamentPage() {
   const session = await getSession();
@@ -34,13 +17,14 @@ export default async function TournamentPage() {
     isTournamentLocked(),
   ]);
 
-  const [initial, postGroup] = await Promise.all([
+  const [initial, postGroup, stats] = await Promise.all([
     prisma.tournamentPrediction.findUnique({
       where: { userId_window: { userId: session.userId, window: "INITIAL" } },
     }),
     prisma.tournamentPrediction.findUnique({
       where: { userId_window: { userId: session.userId, window: "POST_GROUP" } },
     }),
+    locked ? getTournamentStats() : Promise.resolve(null),
   ]);
 
   return (
@@ -71,6 +55,17 @@ export default async function TournamentPage() {
           initialPrediction={initial}
           postGroupPrediction={postGroup}
         />
+
+        {stats && (
+          <TournamentStatsCharts
+            totalRespondents={stats.totalRespondents}
+            champion={stats.champion}
+            topScorer={stats.topScorer}
+            topAssist={stats.topAssist}
+            bestGoalkeeper={stats.bestGoalkeeper}
+            currentUserId={session.userId}
+          />
+        )}
       </div>
     </PageWrapper>
   );
