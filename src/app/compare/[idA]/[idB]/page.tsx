@@ -315,11 +315,11 @@ export default async function ComparePage({
                       <p
                         className={cn(
                           "text-sm font-bold tabular-nums",
-                          row.aPts === 6
+                          row.aPts === 6 || row.aPts === 7
                             ? "text-emerald-600 dark:text-emerald-400"
-                            : row.aPts === 4
+                            : row.aPts === 4 || row.aPts === 5
                             ? "text-blue-600 dark:text-blue-400"
-                            : row.aPts === 2
+                            : row.aPts === 2 || row.aPts === 3
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-muted-foreground"
                         )}
@@ -337,11 +337,11 @@ export default async function ComparePage({
                       <p
                         className={cn(
                           "text-sm font-bold tabular-nums",
-                          row.bPts === 6
+                          row.bPts === 6 || row.bPts === 7
                             ? "text-emerald-600 dark:text-emerald-400"
-                            : row.bPts === 4
+                            : row.bPts === 4 || row.bPts === 5
                             ? "text-blue-600 dark:text-blue-400"
-                            : row.bPts === 2
+                            : row.bPts === 2 || row.bPts === 3
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-muted-foreground"
                         )}

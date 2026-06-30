@@ -164,9 +164,9 @@ export default async function PlayerPage({
                     </div>
                     <span className={cn(
                       "text-sm font-bold ml-3 flex-shrink-0 tabular-nums",
-                      pred.points === 6 ? "text-emerald-600 dark:text-emerald-400" :
-                      pred.points === 4 ? "text-blue-600 dark:text-blue-400" :
-                      pred.points === 2 ? "text-amber-600 dark:text-amber-400" :
+                      pred.points === 6 || pred.points === 7 ? "text-emerald-600 dark:text-emerald-400" :
+                      pred.points === 4 || pred.points === 5 ? "text-blue-600 dark:text-blue-400" :
+                      pred.points === 2 || pred.points === 3 ? "text-amber-600 dark:text-amber-400" :
                       "text-muted-foreground"
                     )}>
                       {pred.points}pt

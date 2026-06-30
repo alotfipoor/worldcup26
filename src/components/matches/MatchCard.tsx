@@ -74,9 +74,9 @@ function PredictionBadge({ prediction, isLocked, isFinished }: {
     return (
       <span className={cn(
         "inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full",
-        pts === 6 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" :
-        pts === 4 ? "bg-blue-500/15 text-blue-600 dark:text-blue-400" :
-        pts === 2 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" :
+        pts === 6 || pts === 7 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" :
+        pts === 4 || pts === 5 ? "bg-blue-500/15 text-blue-600 dark:text-blue-400" :
+        pts === 2 || pts === 3 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" :
         "bg-red-500/10 text-red-600 dark:text-red-400"
       )}>
         <CheckCircle2 className="h-3 w-3" />
@@ -107,9 +107,9 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
   const label = formatGroupName(match.groupName) || STAGE_LABELS[match.stage] || match.stage;
 
   const predictionBg =
-    prediction?.points === 6 ? "bg-emerald-500/8 dark:bg-emerald-500/10 border-emerald-500/20" :
-    prediction?.points === 4 ? "bg-blue-500/8 dark:bg-blue-500/10 border-blue-500/20" :
-    prediction?.points === 2 ? "bg-amber-500/8 dark:bg-amber-500/10 border-amber-500/20" :
+    prediction?.points === 6 || prediction?.points === 7 ? "bg-emerald-500/8 dark:bg-emerald-500/10 border-emerald-500/20" :
+    prediction?.points === 4 || prediction?.points === 5 ? "bg-blue-500/8 dark:bg-blue-500/10 border-blue-500/20" :
+    prediction?.points === 2 || prediction?.points === 3 ? "bg-amber-500/8 dark:bg-amber-500/10 border-amber-500/20" :
     prediction?.points === 0 ? "bg-red-500/5 dark:bg-red-500/8 border-red-500/15" :
     "bg-muted/30 border-border/60";
 
