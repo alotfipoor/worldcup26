@@ -14,7 +14,8 @@ async function getTournamentWindow(): Promise<"INITIAL" | "POST_GROUP"> {
 }
 
 async function isTournamentLocked(): Promise<boolean> {
-  if (new Date() < new Date("2026-06-29T17:00:00Z")) return false;
+  // Extended deadline: keep unlocked until 2026-06-30 18:00 BST (17:00 UTC)
+  if (new Date() < new Date("2026-06-30T17:00:00Z")) return false;
   const r16 = await prisma.match.count({
     where: {
       stage: { in: ["ROUND_OF_32", "ROUND_OF_16"] },
@@ -54,7 +55,7 @@ export default async function TournamentPage() {
 
         {window === "POST_GROUP" && !locked && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-            <strong>Group stage is over!</strong> Update your prediction before it locks at 18:00 BST tomorrow.
+            <strong>Group stage is over!</strong> Update your prediction before it locks at 18:00 BST today.
           </div>
         )}
 

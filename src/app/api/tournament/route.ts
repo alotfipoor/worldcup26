@@ -10,7 +10,8 @@ async function getTournamentWindow(): Promise<"INITIAL" | "POST_GROUP"> {
 }
 
 async function isTournamentLocked(): Promise<boolean> {
-  if (new Date() < new Date("2026-06-29T17:00:00Z")) return false;
+  // Extended deadline: keep unlocked until 2026-06-30 18:00 BST (17:00 UTC)
+  if (new Date() < new Date("2026-06-30T17:00:00Z")) return false;
   const r16Count = await prisma.match.count({
     where: {
       stage: { in: ["ROUND_OF_32", "ROUND_OF_16"] },
