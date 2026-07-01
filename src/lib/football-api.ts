@@ -63,7 +63,17 @@ async function apiFetch<T>(path: string): Promise<T> {
   });
 
   if (!res.ok) {
-    throw new Error(`football-data.org API error: ${res.status} ${path}`);
+    const body = await res.text().catch(() => "");
+    let detail = body;
+    try {
+      const parsed = JSON.parse(body) as { message?: string; errorCode?: number };
+      detail = parsed.message ?? body;
+    } catch {
+      // body wasn't JSON, use as-is
+    }
+    throw new Error(
+      `football-data.org API error: ${res.status} ${path}${detail ? ` — ${detail}` : ""}`
+    );
   }
 
   return res.json() as Promise<T>;
