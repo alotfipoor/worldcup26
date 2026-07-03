@@ -6,20 +6,23 @@ export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("Authorization");
   const syncSecret = process.env.SYNC_SECRET;
 
-  const isAdminSession = async () => {
-    const session = await getSession();
-    return session?.user?.role === "ADMIN";
-  };
-
   const isCronCall =
     syncSecret && authHeader === `Bearer ${syncSecret}`;
 
-  if (!isCronCall && !(await isAdminSession())) {
+  let isAdmin = false;
+  if (!isCronCall) {
+    const session = await getSession();
+    isAdmin = session?.user?.role === "ADMIN";
+  }
+
+  if (!isCronCall && !isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const result = await syncMatches();
+    // Admin-triggered syncs always hit the API; cron/background-triggered
+    // ones only do so once a match is expected to have finished.
+    const result = await syncMatches({ force: isAdmin });
     return NextResponse.json({ ok: true, ...result, syncedAt: new Date().toISOString() });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Sync failed";

@@ -34,7 +34,51 @@ export function maybeTriggerBackgroundSync() {
     .catch(() => {});
 }
 
-export async function syncMatches(): Promise<{ synced: number; scored: number }> {
+// Our football-data.org plan doesn't include live in-play scores, so polling
+// while a match is ongoing burns API calls for no benefit and risks the key
+// getting flagged for excessive use. Instead, only hit the API once a match
+// is expected to be over. Buffers are generous: group matches can't go to
+// extra time, knockout matches can go 90 + ET + penalties.
+const GROUP_FINISH_BUFFER_MS = 130 * 60 * 1000; // 2h10m
+const KNOCKOUT_FINISH_BUFFER_MS = 170 * 60 * 1000; // 2h50m
+// Safety net so schedule changes (postponements, bracket placeholders being
+// filled in) still get picked up even with nothing due to finish soon.
+const FALLBACK_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
+
+function expectedFinishBufferMs(stage: Stage): number {
+  return stage === "GROUP" ? GROUP_FINISH_BUFFER_MS : KNOCKOUT_FINISH_BUFFER_MS;
+}
+
+async function isAutoSyncDue(): Promise<boolean> {
+  const pending = await prisma.match.findMany({
+    where: { status: { in: ["SCHEDULED", "LIVE"] } },
+    select: { kickoff: true, stage: true },
+  });
+
+  if (pending.length === 0) {
+    const last = await prisma.match.findFirst({
+      orderBy: { syncedAt: "desc" },
+      select: { syncedAt: true },
+    });
+    return (
+      !last?.syncedAt ||
+      Date.now() - last.syncedAt.getTime() > FALLBACK_SYNC_INTERVAL_MS
+    );
+  }
+
+  const now = Date.now();
+  return pending.some(
+    (m) => now - m.kickoff.getTime() >= expectedFinishBufferMs(m.stage)
+  );
+}
+
+export async function syncMatches(
+  opts: { force?: boolean } = {}
+): Promise<{ synced: number; scored: number; skipped?: boolean }> {
+  if (!opts.force && !(await isAutoSyncDue())) {
+    return { synced: 0, scored: 0, skipped: true };
+  }
+
   const apiMatches = await fetchAllMatches();
 
   // Pre-load which finished matches already have goals so we don't re-fetch them
