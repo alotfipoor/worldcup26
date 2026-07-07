@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy, Sparkles } from "lucide-react";
+import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy, Sparkles, UserPlus } from "lucide-react";
 import AIPredictionsTab from "@/components/admin/AIPredictionsTab";
 import { cn } from "@/lib/utils";
 import type { SideBetItem } from "@/types";
@@ -31,12 +31,27 @@ interface FinishedMatch {
   predictionCount: number;
 }
 
+interface MissingUser {
+  id: string;
+  name: string | null;
+}
+
+interface LockedMatch {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  kickoff: string;
+  status: string;
+  missingUsers: MissingUser[];
+}
+
 interface AdminPanelProps {
   users: AdminUser[];
   lastSync: Date | null;
   matchCount: number;
   sideBets: SideBetItem[];
   finishedMatches: FinishedMatch[];
+  lockedMatches: LockedMatch[];
 }
 
 export default function AdminPanel({
@@ -45,6 +60,7 @@ export default function AdminPanel({
   matchCount,
   sideBets: initialSideBets,
   finishedMatches,
+  lockedMatches: initialLockedMatches,
 }: AdminPanelProps) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
@@ -71,6 +87,12 @@ export default function AdminPanel({
   const [editClosesAt, setEditClosesAt] = useState("");
   const [editPointsReward, setEditPointsReward] = useState(10);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [lockedMatches, setLockedMatches] = useState(initialLockedMatches);
+  const [backfillMatchId, setBackfillMatchId] = useState<string | null>(null);
+  const [backfillUserId, setBackfillUserId] = useState("");
+  const [backfillHome, setBackfillHome] = useState("");
+  const [backfillAway, setBackfillAway] = useState("");
+  const [backfilling, setBackfilling] = useState(false);
 
   function toDatetimeLocal(iso: string): string {
     const d = new Date(iso);
@@ -219,6 +241,42 @@ export default function AdminPanel({
     const { scored } = await res.json();
     toast.success(`Done! Re-scored ${scored} predictions.`);
     setOverridingMatchId(null);
+    router.refresh();
+  }
+
+  async function submitBackfill(matchId: string) {
+    if (!backfillUserId || backfillHome === "" || backfillAway === "") return;
+    setBackfilling(true);
+    const res = await fetch("/api/admin/predictions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: backfillUserId,
+        matchId,
+        homeScore: parseInt(backfillHome),
+        awayScore: parseInt(backfillAway),
+      }),
+    });
+    setBackfilling(false);
+    if (!res.ok) {
+      const d = await res.json();
+      toast.error(d.error ?? "Failed to add prediction");
+      return;
+    }
+    setLockedMatches((prev) =>
+      prev
+        .map((m) =>
+          m.id === matchId
+            ? { ...m, missingUsers: m.missingUsers.filter((u) => u.id !== backfillUserId) }
+            : m
+        )
+        .filter((m) => m.missingUsers.length > 0)
+    );
+    setBackfillMatchId(null);
+    setBackfillUserId("");
+    setBackfillHome("");
+    setBackfillAway("");
+    toast.success("Prediction added!");
     router.refresh();
   }
 
@@ -458,6 +516,112 @@ export default function AdminPanel({
                     >
                       Cancel
                     </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Backfill missing predictions */}
+      {activeTab === "matches" && (
+        <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-4 space-y-1">
+            <h2 className="font-semibold text-sm flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Backfill Missing Predictions
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              For locked matches where someone forgot to predict — add their score on their behalf.
+            </p>
+          </div>
+          {lockedMatches.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nobody&apos;s missing a prediction on a locked match.
+            </p>
+          ) : (
+            lockedMatches.map((match) => (
+              <div key={match.id} className="bg-card rounded-xl border border-border p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {match.homeTeam} vs {match.awayTeam}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {match.missingUsers.length} missing &middot;{" "}
+                      {new Intl.DateTimeFormat("default", { dateStyle: "short", timeStyle: "short" }).format(
+                        new Date(match.kickoff)
+                      )}
+                    </p>
+                  </div>
+                  {backfillMatchId !== match.id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs px-3 flex-shrink-0"
+                      onClick={() => {
+                        setBackfillMatchId(match.id);
+                        setBackfillUserId("");
+                        setBackfillHome("");
+                        setBackfillAway("");
+                      }}
+                    >
+                      Add prediction
+                    </Button>
+                  )}
+                </div>
+                {backfillMatchId === match.id && (
+                  <div className="space-y-2 pt-1">
+                    <select
+                      value={backfillUserId}
+                      onChange={(e) => setBackfillUserId(e.target.value)}
+                      className="w-full h-8 text-xs rounded-lg border border-border bg-background px-2"
+                    >
+                      <option value="">Select user…</option>
+                      {match.missingUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name ?? "Unnamed"}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-1">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={backfillHome}
+                          onChange={(e) => setBackfillHome(e.target.value)}
+                          className="h-8 w-16 text-center text-sm"
+                          placeholder="H"
+                        />
+                        <span className="text-sm text-muted-foreground">–</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={backfillAway}
+                          onChange={(e) => setBackfillAway(e.target.value)}
+                          className="h-8 w-16 text-center text-sm"
+                          placeholder="A"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        className="h-8 text-xs px-3"
+                        disabled={backfilling || !backfillUserId || backfillHome === "" || backfillAway === ""}
+                        onClick={() => submitBackfill(match.id)}
+                      >
+                        {backfilling ? "Saving…" : "Save"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs"
+                        onClick={() => setBackfillMatchId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

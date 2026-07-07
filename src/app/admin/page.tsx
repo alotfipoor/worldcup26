@@ -11,7 +11,7 @@ export default async function AdminPage() {
   const session = await getSession();
   if (!session || session.user.role !== "ADMIN") redirect("/");
 
-  const [users, lastSync, matchCount, rawBets, finishedMatches] = await Promise.all([
+  const [users, lastSync, matchCount, rawBets, finishedMatches, lockedMatchesRaw] = await Promise.all([
     prisma.user.findMany({
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { predictions: true } } },
@@ -40,7 +40,36 @@ export default async function AdminPage() {
         _count: { select: { predictions: true } },
       },
     }),
+    prisma.match.findMany({
+      where: { kickoff: { lte: new Date() } },
+      orderBy: { kickoff: "desc" },
+      select: {
+        id: true,
+        homeTeam: true,
+        awayTeam: true,
+        kickoff: true,
+        status: true,
+        predictions: { select: { userId: true } },
+      },
+    }),
   ]);
+
+  const lockedMatches = lockedMatchesRaw
+    .map((m) => {
+      const predictedUserIds = new Set(m.predictions.map((p) => p.userId));
+      const missingUsers = users
+        .filter((u) => !predictedUserIds.has(u.id))
+        .map((u) => ({ id: u.id, name: u.name }));
+      return {
+        id: m.id,
+        homeTeam: m.homeTeam,
+        awayTeam: m.awayTeam,
+        kickoff: m.kickoff.toISOString(),
+        status: m.status,
+        missingUsers,
+      };
+    })
+    .filter((m) => m.missingUsers.length > 0);
 
   const sideBets: SideBetItem[] = rawBets.map((bet) => ({
     id: bet.id,
@@ -77,6 +106,7 @@ export default async function AdminPage() {
             kickoff: m.kickoff.toISOString(),
             predictionCount: m._count.predictions,
           }))}
+          lockedMatches={lockedMatches}
         />
       </div>
     </PageWrapper>

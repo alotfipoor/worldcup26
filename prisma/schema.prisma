@@ -117,6 +117,7 @@ model Prediction {
   predictedWinner  String?
   points           Int?
   reason           String?
+  setByAdmin       Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
