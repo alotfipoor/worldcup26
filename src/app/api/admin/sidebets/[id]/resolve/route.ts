@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { isSideBetAnswerCorrect } from "@/lib/sidebets";
 
 export async function POST(
   request: Request,
@@ -25,15 +26,8 @@ export async function POST(
   });
 
   if (!bet) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (bet.resolved) return NextResponse.json({ error: "Already resolved" }, { status: 400 });
 
-  const normalised = correctAnswer.toLowerCase().trim();
-
-  function isCorrect(answer: string): boolean {
-    const a = answer.toLowerCase().trim();
-    if (bet!.answerType === "CHOICE") return a === normalised;
-    return a.includes(normalised) || normalised.includes(a);
-  }
+  const isCorrect = (answer: string) => isSideBetAnswerCorrect(answer, correctAnswer, bet.answerType);
 
   await prisma.$transaction([
     prisma.sideBet.update({

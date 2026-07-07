@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isSideBetAnswerCorrect } from "@/lib/sidebets";
 import type { SideBetItem } from "@/types";
 
 function isClosed(bet: SideBetItem): boolean {
@@ -53,7 +54,7 @@ function AnswerReveal({ bet }: { bet: SideBetItem }) {
             (v) => v.answer.toLowerCase() === opt.toLowerCase()
           );
           const pct = total > 0 ? Math.round((votes.length / total) * 100) : 0;
-          const isCorrect = resolved && correctAnswer?.toLowerCase() === opt.toLowerCase();
+          const isCorrect = resolved && isSideBetAnswerCorrect(opt, correctAnswer, "CHOICE");
           return (
             <div key={opt} className="space-y-1">
               <div className="flex items-center justify-between">
@@ -97,11 +98,7 @@ function AnswerReveal({ bet }: { bet: SideBetItem }) {
   return (
     <div className="space-y-1">
       {voterAnswers.map((v) => {
-        const isCorrect =
-          resolved &&
-          correctAnswer !== null &&
-          (v.answer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
-            correctAnswer.toLowerCase().includes(v.answer.toLowerCase()));
+        const isCorrect = resolved && isSideBetAnswerCorrect(v.answer, correctAnswer, "TEXT");
         return (
           <div key={v.name} className="flex items-center justify-between gap-2 text-xs">
             <span className="text-muted-foreground">{v.name}</span>

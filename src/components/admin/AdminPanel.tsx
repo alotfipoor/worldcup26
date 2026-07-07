@@ -716,10 +716,47 @@ export default function AdminPanel({
                   <p className="text-xs text-muted-foreground">
                     {bet.predictionCount} answer{bet.predictionCount !== 1 ? "s" : ""}
                   </p>
-                  {bet.resolved ? (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                      Correct: {bet.correctAnswer}
-                    </p>
+                  {resolvingId === bet.id ? (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Correct answer (comma-separate if multiple)"
+                        value={resolveAnswer}
+                        onChange={(e) => setResolveAnswer(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 text-xs px-3"
+                        onClick={() => resolveSideBet(bet.id)}
+                      >
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs"
+                        onClick={() => setResolvingId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : bet.resolved ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                        Correct: {bet.correctAnswer}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs px-3 flex-shrink-0"
+                        onClick={() => {
+                          setResolvingId(bet.id);
+                          setResolveAnswer(bet.correctAnswer ?? "");
+                        }}
+                      >
+                        Edit answer
+                      </Button>
+                    </div>
                   ) : editingBetId === bet.id ? (
                     <div className="space-y-2 pt-1">
                       <Input
@@ -767,30 +804,6 @@ export default function AdminPanel({
                           Cancel
                         </Button>
                       </div>
-                    </div>
-                  ) : resolvingId === bet.id ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Correct answer"
-                        value={resolveAnswer}
-                        onChange={(e) => setResolveAnswer(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                      <Button
-                        size="sm"
-                        className="h-8 text-xs px-3"
-                        onClick={() => resolveSideBet(bet.id)}
-                      >
-                        Confirm
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 text-xs"
-                        onClick={() => setResolvingId(null)}
-                      >
-                        Cancel
-                      </Button>
                     </div>
                   ) : (
                     <div className="flex gap-2">
