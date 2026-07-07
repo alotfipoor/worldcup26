@@ -35,8 +35,9 @@ export interface SessionUser {
 export interface SideBetItem {
   id: string;
   question: string;
-  answerType: "TEXT" | "CHOICE";
+  answerType: "TEXT" | "CHOICE" | "MULTI_CHOICE";
   options: string[] | null;
+  maxPicks: number | null;
   closesAt: string; // ISO string
   correctAnswer: string | null;
   pointsReward: number;

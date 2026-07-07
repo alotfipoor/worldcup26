@@ -27,6 +27,7 @@ export default async function SideBetsPage() {
       question: bet.question,
       answerType: bet.answerType,
       options: bet.options as string[] | null,
+      maxPicks: bet.maxPicks,
       closesAt: bet.closesAt.toISOString(),
       correctAnswer: bet.correctAnswer,
       pointsReward: bet.pointsReward,

@@ -9,17 +9,21 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { question, answerType, options, closesAt, pointsReward } = body;
+  const { question, answerType, options, closesAt, pointsReward, maxPicks } = body;
 
   if (!question?.trim() || !closesAt) {
     return NextResponse.json({ error: "question and closesAt are required" }, { status: 400 });
   }
 
+  const resolvedType = answerType === "CHOICE" || answerType === "MULTI_CHOICE" ? answerType : "TEXT";
+  const hasOptions = resolvedType !== "TEXT" && Array.isArray(options);
+
   const bet = await prisma.sideBet.create({
     data: {
       question: question.trim(),
-      answerType: answerType === "CHOICE" ? "CHOICE" : "TEXT",
-      options: answerType === "CHOICE" && Array.isArray(options) ? options : undefined,
+      answerType: resolvedType,
+      options: hasOptions ? options : undefined,
+      maxPicks: resolvedType === "MULTI_CHOICE" && typeof maxPicks === "number" ? maxPicks : undefined,
       closesAt: new Date(closesAt),
       pointsReward: typeof pointsReward === "number" ? pointsReward : 10,
     },

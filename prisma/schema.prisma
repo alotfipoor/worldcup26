@@ -38,6 +38,7 @@ enum PredictionWindow {
 enum SideBetAnswerType {
   TEXT
   CHOICE
+  MULTI_CHOICE
 }
 
 model User {
@@ -150,6 +151,7 @@ model SideBet {
   question      String
   answerType    SideBetAnswerType   @default(TEXT)
   options       Json?
+  maxPicks      Int?
   closesAt      DateTime
   correctAnswer String?
   pointsReward  Int                 @default(10)

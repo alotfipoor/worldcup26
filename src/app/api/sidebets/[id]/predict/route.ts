@@ -11,7 +11,7 @@ export async function POST(
 
   const { id } = await params;
   const body = await request.json();
-  const answer = (body?.answer ?? "").trim();
+  let answer: string = (body?.answer ?? "").trim();
 
   if (!answer) {
     return NextResponse.json({ error: "Answer is required" }, { status: 400 });
@@ -21,6 +21,21 @@ export async function POST(
   if (!bet) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (bet.resolved) return NextResponse.json({ error: "Bet already resolved" }, { status: 400 });
   if (new Date() > bet.closesAt) return NextResponse.json({ error: "Bet is closed" }, { status: 400 });
+
+  if (bet.answerType === "MULTI_CHOICE") {
+    const options = (bet.options as string[] | null) ?? [];
+    const picks = answer.split(",").map((s: string) => s.trim()).filter(Boolean);
+    const uniqueLower = [...new Set(picks.map((p) => p.toLowerCase()))];
+    const matched = options.filter((o) => uniqueLower.includes(o.toLowerCase()));
+
+    if (matched.length === 0) {
+      return NextResponse.json({ error: "Pick at least one option" }, { status: 400 });
+    }
+    if (bet.maxPicks && matched.length > bet.maxPicks) {
+      return NextResponse.json({ error: `Pick at most ${bet.maxPicks} options` }, { status: 400 });
+    }
+    answer = matched.join(", ");
+  }
 
   const prediction = await prisma.sideBetPrediction.upsert({
     where: { userId_sideBetId: { userId: session.userId, sideBetId: id } },

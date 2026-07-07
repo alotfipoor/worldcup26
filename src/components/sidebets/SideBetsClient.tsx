@@ -44,14 +44,16 @@ function AnswerReveal({ bet }: { bet: SideBetItem }) {
   const { voterAnswers, answerType, options, correctAnswer, resolved } = bet;
   if (!voterAnswers || voterAnswers.length === 0) return null;
 
-  if (answerType === "CHOICE") {
-    const allOptions = options ?? [...new Set(voterAnswers.map((v) => v.answer))];
+  if (answerType === "CHOICE" || answerType === "MULTI_CHOICE") {
+    const picksOf = (answer: string) =>
+      answerType === "MULTI_CHOICE" ? answer.split(",").map((s) => s.trim()) : [answer];
+    const allOptions = options ?? [...new Set(voterAnswers.flatMap((v) => picksOf(v.answer)))];
     const total = voterAnswers.length;
     return (
       <div className="space-y-2.5">
         {allOptions.map((opt) => {
-          const votes = voterAnswers.filter(
-            (v) => v.answer.toLowerCase() === opt.toLowerCase()
+          const votes = voterAnswers.filter((v) =>
+            picksOf(v.answer).some((p) => p.toLowerCase() === opt.toLowerCase())
           );
           const pct = total > 0 ? Math.round((votes.length / total) * 100) : 0;
           const isCorrect = resolved && isSideBetAnswerCorrect(opt, correctAnswer, "CHOICE");
@@ -125,6 +127,17 @@ function SideBetCard({ bet: initialBet, currentUserName }: { bet: SideBetItem; c
   const won = bet.resolved && (bet.myPointsAwarded ?? 0) > 0;
   const lost = bet.resolved && bet.myPointsAwarded === 0 && bet.myAnswer !== null;
 
+  function toggleMultiPick(opt: string) {
+    const picks = answer.split(",").map((s) => s.trim()).filter(Boolean);
+    const selected = picks.some((p) => p.toLowerCase() === opt.toLowerCase());
+    if (selected) {
+      setAnswer(picks.filter((p) => p.toLowerCase() !== opt.toLowerCase()).join(", "));
+      return;
+    }
+    if (bet.maxPicks != null && picks.length >= bet.maxPicks) return;
+    setAnswer([...picks, opt].join(", "));
+  }
+
   async function submit() {
     if (!answer.trim()) return;
     setSubmitting(true);
@@ -167,7 +180,11 @@ function SideBetCard({ bet: initialBet, currentUserName }: { bet: SideBetItem; c
             : closed ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                      : "bg-primary/10 text-primary"
         )}>
-          {bet.resolved ? (won ? `+${bet.myPointsAwarded}pt` : "resolved") : closed ? "closed" : `${bet.pointsReward}pt`}
+          {bet.resolved
+            ? won ? `+${bet.myPointsAwarded}pt` : "resolved"
+            : closed
+              ? "closed"
+              : bet.answerType === "MULTI_CHOICE" ? `${bet.pointsReward}pt each` : `${bet.pointsReward}pt`}
         </span>
       </div>
 
@@ -210,6 +227,37 @@ function SideBetCard({ bet: initialBet, currentUserName }: { bet: SideBetItem; c
                   {opt}
                 </button>
               ))}
+            </div>
+          ) : bet.answerType === "MULTI_CHOICE" && bet.options ? (
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap gap-2">
+                {bet.options.map((opt) => {
+                  const picks = answer.split(",").map((s) => s.trim()).filter(Boolean);
+                  const selected = picks.some((p) => p.toLowerCase() === opt.toLowerCase());
+                  const atCap = !selected && bet.maxPicks != null && picks.length >= bet.maxPicks;
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => toggleMultiPick(opt)}
+                      disabled={closed || atCap}
+                      className={cn(
+                        "text-xs px-3 py-1.5 rounded-full border transition-colors",
+                        selected
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted border-border text-muted-foreground hover:text-foreground",
+                        (closed || atCap) && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+              {bet.maxPicks != null && (
+                <p className="text-[10px] text-muted-foreground">
+                  {answer.split(",").map((s) => s.trim()).filter(Boolean).length}/{bet.maxPicks} selected
+                </p>
+              )}
             </div>
           ) : (
             <Input

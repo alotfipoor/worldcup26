@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { isSideBetAnswerCorrect } from "@/lib/sidebets";
+import { calculateSideBetPoints } from "@/lib/sidebets";
 
 export async function POST(
   request: Request,
@@ -27,7 +27,8 @@ export async function POST(
 
   if (!bet) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const isCorrect = (answer: string) => isSideBetAnswerCorrect(answer, correctAnswer, bet.answerType);
+  const points = (answer: string) =>
+    calculateSideBetPoints(answer, correctAnswer, bet.answerType, bet.pointsReward);
 
   await prisma.$transaction([
     prisma.sideBet.update({
@@ -37,12 +38,12 @@ export async function POST(
     ...bet.predictions.map((pred) =>
       prisma.sideBetPrediction.update({
         where: { id: pred.id },
-        data: { pointsAwarded: isCorrect(pred.answer) ? bet.pointsReward : 0 },
+        data: { pointsAwarded: points(pred.answer) },
       })
     ),
   ]);
 
-  const winners = bet.predictions.filter((p) => isCorrect(p.answer)).length;
+  const winners = bet.predictions.filter((p) => points(p.answer) > 0).length;
 
   return NextResponse.json({ ok: true, winners, total: bet.predictions.length });
 }

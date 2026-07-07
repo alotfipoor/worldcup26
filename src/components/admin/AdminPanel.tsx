@@ -73,8 +73,9 @@ export default function AdminPanel({
   const [newQuestion, setNewQuestion] = useState("");
   const [newClosesAt, setNewClosesAt] = useState("");
   const [newPoints, setNewPoints] = useState(10);
-  const [newAnswerType, setNewAnswerType] = useState<"TEXT" | "CHOICE">("TEXT");
+  const [newAnswerType, setNewAnswerType] = useState<"TEXT" | "CHOICE" | "MULTI_CHOICE">("TEXT");
   const [newOptions, setNewOptions] = useState("");
+  const [newMaxPicks, setNewMaxPicks] = useState(4);
   const [creatingBet, setCreatingBet] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resolveAnswer, setResolveAnswer] = useState("");
@@ -176,9 +177,10 @@ export default function AdminPanel({
       body: JSON.stringify({
         question: newQuestion.trim(),
         answerType: newAnswerType,
-        options: newAnswerType === "CHOICE"
+        options: newAnswerType !== "TEXT"
           ? newOptions.split(",").map((s) => s.trim()).filter(Boolean)
           : null,
+        maxPicks: newAnswerType === "MULTI_CHOICE" ? newMaxPicks : undefined,
         closesAt: newClosesAt,
         pointsReward: newPoints,
       }),
@@ -191,6 +193,7 @@ export default function AdminPanel({
       closesAt: bet.closesAt,
       createdAt: bet.createdAt,
       options: bet.options ?? null,
+      maxPicks: bet.maxPicks ?? null,
       myAnswer: null,
       myPointsAwarded: null,
       predictionCount: 0,
@@ -199,6 +202,19 @@ export default function AdminPanel({
     setNewClosesAt("");
     setNewOptions("");
     toast.success("Side bet created!");
+  }
+
+  function toggleResolvePick(opt: string, multi: boolean) {
+    const current = resolveAnswer.split(",").map((s) => s.trim()).filter(Boolean);
+    const selected = current.some((c) => c.toLowerCase() === opt.toLowerCase());
+    if (!multi) {
+      setResolveAnswer(selected ? "" : opt);
+      return;
+    }
+    const next = selected
+      ? current.filter((c) => c.toLowerCase() !== opt.toLowerCase())
+      : [...current, opt];
+    setResolveAnswer(next.join(", "));
   }
 
   async function resolveSideBet(id: string) {
@@ -654,7 +670,9 @@ export default function AdminPanel({
                 />
               </div>
               <div className="w-20 space-y-1">
-                <Label className="text-xs text-muted-foreground">Points</Label>
+                <Label className="text-xs text-muted-foreground">
+                  {newAnswerType === "MULTI_CHOICE" ? "Pts/pick" : "Points"}
+                </Label>
                 <Input
                   type="number"
                   value={newPoints}
@@ -664,7 +682,7 @@ export default function AdminPanel({
               </div>
             </div>
             <div className="flex gap-2">
-              {(["TEXT", "CHOICE"] as const).map((type) => (
+              {(["TEXT", "CHOICE", "MULTI_CHOICE"] as const).map((type) => (
                 <button
                   key={type}
                   onClick={() => setNewAnswerType(type)}
@@ -675,16 +693,28 @@ export default function AdminPanel({
                       : "bg-muted border-border text-muted-foreground"
                   )}
                 >
-                  {type === "TEXT" ? "Free text" : "Multiple choice"}
+                  {type === "TEXT" ? "Free text" : type === "CHOICE" ? "Multiple choice" : "Multi-select"}
                 </button>
               ))}
             </div>
-            {newAnswerType === "CHOICE" && (
+            {(newAnswerType === "CHOICE" || newAnswerType === "MULTI_CHOICE") && (
               <Input
                 placeholder="Options (comma-separated)"
                 value={newOptions}
                 onChange={(e) => setNewOptions(e.target.value)}
               />
+            )}
+            {newAnswerType === "MULTI_CHOICE" && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground whitespace-nowrap">Max picks</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={newMaxPicks}
+                  onChange={(e) => setNewMaxPicks(Number(e.target.value))}
+                  className="w-20"
+                />
+              </div>
             )}
             <Button
               onClick={createSideBet}
@@ -717,28 +747,57 @@ export default function AdminPanel({
                     {bet.predictionCount} answer{bet.predictionCount !== 1 ? "s" : ""}
                   </p>
                   {resolvingId === bet.id ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Correct answer (comma-separate if multiple)"
-                        value={resolveAnswer}
-                        onChange={(e) => setResolveAnswer(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                      <Button
-                        size="sm"
-                        className="h-8 text-xs px-3"
-                        onClick={() => resolveSideBet(bet.id)}
-                      >
-                        Confirm
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 text-xs"
-                        onClick={() => setResolvingId(null)}
-                      >
-                        Cancel
-                      </Button>
+                    <div className="space-y-2">
+                      {bet.options && bet.options.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {bet.options.map((opt) => {
+                            const selected = resolveAnswer
+                              .split(",")
+                              .map((s) => s.trim().toLowerCase())
+                              .includes(opt.toLowerCase());
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => toggleResolvePick(opt, bet.answerType === "MULTI_CHOICE")}
+                                className={cn(
+                                  "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                                  selected
+                                    ? "bg-emerald-500 text-white border-emerald-500"
+                                    : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <Input
+                          placeholder="Correct answer"
+                          value={resolveAnswer}
+                          onChange={(e) => setResolveAnswer(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs px-3"
+                          disabled={!resolveAnswer.trim()}
+                          onClick={() => resolveSideBet(bet.id)}
+                        >
+                          Confirm
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 text-xs"
+                          onClick={() => setResolvingId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : bet.resolved ? (
                     <div className="flex items-center justify-between gap-2">
