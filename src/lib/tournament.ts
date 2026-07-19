@@ -22,6 +22,25 @@ export async function isTournamentLocked(): Promise<boolean> {
   return r16 > 0;
 }
 
+export interface ActualTournamentResults {
+  champion: string;
+  topScorer: string;
+  topAssist: string;
+  bestGoalkeeper: string;
+}
+
+export async function getActualTournamentResults(): Promise<ActualTournamentResults> {
+  const row = await prisma.actualTournamentResult.findUnique({
+    where: { id: "singleton" },
+  });
+  return {
+    champion: row?.champion ?? "",
+    topScorer: row?.topScorer ?? "",
+    topAssist: row?.topAssist ?? "",
+    bestGoalkeeper: row?.bestGoalkeeper ?? "",
+  };
+}
+
 export interface TournamentVoteGroup {
   label: string;
   count: number;

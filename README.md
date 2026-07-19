@@ -62,9 +62,10 @@ npm run dev          # start dev server at http://localhost:3000
 | `FOOTBALL_API_KEY` | From football-data.org |
 | `SYNC_SECRET` | Run `openssl rand -base64 32` — protects the sync endpoint |
 | `ADMIN_INVITE_CODE` | The code you use to log in as admin |
-| `ACTUAL_CHAMPION` | Set after the final (e.g. `Argentina`) to award champion points |
-| `ACTUAL_TOP_SCORER` | Set after the tournament (case-insensitive player name) |
-| `ACTUAL_TOP_ASSIST` | Set after the tournament (case-insensitive player name) |
+
+The actual champion / top scorer / top assist / best goalkeeper are entered in the
+admin panel (`/admin` → **Results** tab) once known, not via environment variables —
+the leaderboard picks them up immediately.
 
 ---
 
@@ -117,6 +118,7 @@ Log in with your `ADMIN_INVITE_CODE` at `/login`. The `/admin` panel lets you:
 - Create and manage user invite codes
 - Trigger a manual data sync
 - Create, manage, and resolve side bets
+- Enter the actual champion / top scorer / top assist / best goalkeeper once known, to score tournament picks
 - View all predictions
 
 ---

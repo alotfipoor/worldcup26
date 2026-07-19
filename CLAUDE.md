@@ -69,8 +69,7 @@ Log in with `ADMIN_INVITE_CODE` at `/login`.
 Admin panel at `/admin`: manage users, trigger sync, view invite codes.
 
 ## Tournament results
-Once the champion/top scorer is known, set env vars and redeploy:
-- `ACTUAL_CHAMPION=Argentina` (team name, exact match)
-- `ACTUAL_TOP_SCORER=Lionel Messi` (player name, case-insensitive)
-- `ACTUAL_TOP_ASSIST=Angel Di Maria` (player name, case-insensitive)
-- `ACTUAL_BEST_GOALKEEPER=Emiliano Martinez` (player name, case-insensitive)
+Once the champion/top scorer/top assist/best goalkeeper are known, enter them in the
+admin panel (`/admin` → **Results** tab). They're stored in the DB (`ActualTournamentResult`
+singleton row) and take effect immediately — no redeploy needed. Champion is matched
+against the team name; the other three are matched case-insensitively against player names.

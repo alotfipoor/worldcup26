@@ -146,6 +146,15 @@ model TournamentPrediction {
   @@unique([userId, window])
 }
 
+model ActualTournamentResult {
+  id             String   @id @default("singleton")
+  champion       String?
+  topScorer      String?
+  topAssist      String?
+  bestGoalkeeper String?
+  updatedAt      DateTime @updatedAt
+}
+
 model SideBet {
   id            String              @id @default(cuid())
   question      String

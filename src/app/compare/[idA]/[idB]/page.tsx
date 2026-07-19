@@ -5,6 +5,7 @@ import PageWrapper from "@/components/layout/PageWrapper";
 import { cn } from "@/lib/utils";
 import { STAGE_LABELS } from "@/lib/constants";
 import { calculateTournamentPoints } from "@/lib/scoring";
+import { getActualTournamentResults } from "@/lib/tournament";
 
 export const revalidate = 60;
 
@@ -90,10 +91,12 @@ export default async function ComparePage({
 
   if (!playerA?.activatedAt || !playerB?.activatedAt) notFound();
 
-  const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
-  const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
-  const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
-  const actualBestGoalkeeper = process.env.ACTUAL_BEST_GOALKEEPER ?? "";
+  const {
+    champion: actualChampion,
+    topScorer: actualTopScorer,
+    topAssist: actualTopAssist,
+    bestGoalkeeper: actualBestGoalkeeper,
+  } = await getActualTournamentResults();
 
   function getTournamentPoints(
     player: NonNullable<typeof playerA>

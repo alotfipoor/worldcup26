@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy, Sparkles, UserPlus } from "lucide-react";
+import { Copy, Trash2, RefreshCw, Plus, Shield, Trophy, Sparkles, UserPlus, Award } from "lucide-react";
 import AIPredictionsTab from "@/components/admin/AIPredictionsTab";
+import PlayerAutocomplete from "@/components/ui/player-autocomplete";
+import { WC2026_TEAMS, WC2026_PLAYERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { SideBetItem } from "@/types";
 
@@ -45,6 +47,13 @@ interface LockedMatch {
   missingUsers: MissingUser[];
 }
 
+interface ActualResults {
+  champion: string;
+  topScorer: string;
+  topAssist: string;
+  bestGoalkeeper: string;
+}
+
 interface AdminPanelProps {
   users: AdminUser[];
   lastSync: Date | null;
@@ -52,6 +61,7 @@ interface AdminPanelProps {
   sideBets: SideBetItem[];
   finishedMatches: FinishedMatch[];
   lockedMatches: LockedMatch[];
+  actualResults: ActualResults;
 }
 
 export default function AdminPanel({
@@ -61,6 +71,7 @@ export default function AdminPanel({
   sideBets: initialSideBets,
   finishedMatches,
   lockedMatches: initialLockedMatches,
+  actualResults: initialActualResults,
 }: AdminPanelProps) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
@@ -68,7 +79,12 @@ export default function AdminPanel({
   const [creating, setCreating] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"users" | "sidebets" | "matches" | "ai">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "sidebets" | "matches" | "ai" | "results">("users");
+  const [resultsChampion, setResultsChampion] = useState(initialActualResults.champion);
+  const [resultsTopScorer, setResultsTopScorer] = useState(initialActualResults.topScorer);
+  const [resultsTopAssist, setResultsTopAssist] = useState(initialActualResults.topAssist);
+  const [resultsBestGoalkeeper, setResultsBestGoalkeeper] = useState(initialActualResults.bestGoalkeeper);
+  const [savingResults, setSavingResults] = useState(false);
   const [sideBets, setSideBets] = useState(initialSideBets);
   const [newQuestion, setNewQuestion] = useState("");
   const [newClosesAt, setNewClosesAt] = useState("");
@@ -296,6 +312,24 @@ export default function AdminPanel({
     router.refresh();
   }
 
+  async function saveResults() {
+    setSavingResults(true);
+    const res = await fetch("/api/admin/tournament-results", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        champion: resultsChampion,
+        topScorer: resultsTopScorer,
+        topAssist: resultsTopAssist,
+        bestGoalkeeper: resultsBestGoalkeeper,
+      }),
+    });
+    setSavingResults(false);
+    if (!res.ok) { toast.error("Failed to save results"); return; }
+    toast.success("Results saved — leaderboard updated!");
+    router.refresh();
+  }
+
   return (
     <div className="space-y-5">
       {/* Tab switcher */}
@@ -344,6 +378,18 @@ export default function AdminPanel({
         >
           <Sparkles className="h-3.5 w-3.5" />
           AI Predictions
+        </button>
+        <button
+          onClick={() => setActiveTab("results")}
+          className={cn(
+            "px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5",
+            activeTab === "results"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Award className="h-3.5 w-3.5" />
+          Results
         </button>
       </div>
 
@@ -648,6 +694,84 @@ export default function AdminPanel({
 
       {/* AI Predictions tab */}
       {activeTab === "ai" && <AIPredictionsTab />}
+
+      {/* Results tab */}
+      {activeTab === "results" && (
+        <div className="space-y-6">
+          <div className="bg-card rounded-xl border border-border p-4 space-y-1">
+            <h2 className="font-semibold text-sm flex items-center gap-2">
+              <Award className="h-4 w-4" />
+              Actual Tournament Results
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Set these once the outcomes are known. Everyone&apos;s tournament predictions are scored against
+              them automatically on the leaderboard — no rescoring step needed.
+            </p>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="resultsChampion" className="text-sm font-semibold">
+                World Cup Champion
+                <span className="ml-2 text-xs font-normal text-muted-foreground">15 pts</span>
+              </Label>
+              <Input
+                id="resultsChampion"
+                list="wc-teams-results"
+                value={resultsChampion}
+                onChange={(e) => setResultsChampion(e.target.value)}
+                placeholder="Team name…"
+              />
+              <datalist id="wc-teams-results">
+                {WC2026_TEAMS.map((t) => (
+                  <option key={t} value={t} />
+                ))}
+              </datalist>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="resultsTopScorer" className="text-sm font-semibold">
+                Golden Boot (Top Scorer)
+                <span className="ml-2 text-xs font-normal text-muted-foreground">10 pts</span>
+              </Label>
+              <PlayerAutocomplete
+                id="resultsTopScorer"
+                value={resultsTopScorer}
+                onChange={setResultsTopScorer}
+                players={WC2026_PLAYERS}
+                placeholder="Player name…"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="resultsTopAssist" className="text-sm font-semibold">
+                Top Assists
+                <span className="ml-2 text-xs font-normal text-muted-foreground">10 pts</span>
+              </Label>
+              <PlayerAutocomplete
+                id="resultsTopAssist"
+                value={resultsTopAssist}
+                onChange={setResultsTopAssist}
+                players={WC2026_PLAYERS}
+                placeholder="Player name…"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="resultsBestGoalkeeper" className="text-sm font-semibold">
+                Best Goalkeeper
+                <span className="ml-2 text-xs font-normal text-muted-foreground">10 pts</span>
+              </Label>
+              <PlayerAutocomplete
+                id="resultsBestGoalkeeper"
+                value={resultsBestGoalkeeper}
+                onChange={setResultsBestGoalkeeper}
+                players={WC2026_PLAYERS}
+                placeholder="Player name…"
+              />
+            </div>
+            <Button onClick={saveResults} disabled={savingResults} className="w-full">
+              {savingResults ? "Saving…" : "Save results"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Side Bets tab */}
       {activeTab === "sidebets" && (

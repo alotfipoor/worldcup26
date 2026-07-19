@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { calculateTournamentPoints } from "@/lib/scoring";
+import { getActualTournamentResults } from "@/lib/tournament";
 import type { LeaderboardUser, FormResult } from "@/types";
 
 export async function GET() {
@@ -31,10 +32,12 @@ export async function GET() {
     },
   });
 
-  const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
-  const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
-  const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
-  const actualBestGoalkeeper = process.env.ACTUAL_BEST_GOALKEEPER ?? "";
+  const {
+    champion: actualChampion,
+    topScorer: actualTopScorer,
+    topAssist: actualTopAssist,
+    bestGoalkeeper: actualBestGoalkeeper,
+  } = await getActualTournamentResults();
 
   const ranked: LeaderboardUser[] = users
     .map((user) => {
