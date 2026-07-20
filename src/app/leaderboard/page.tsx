@@ -6,6 +6,7 @@ import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 import TimelineChart from "@/components/leaderboard/TimelineChart";
 import AutoRefresh from "@/components/AutoRefresh";
 import { calculateTournamentPoints } from "@/lib/scoring";
+import { getActualTournamentResults } from "@/lib/tournament";
 import { getTimelineData } from "@/lib/timeline";
 import type { LeaderboardUser, FormResult } from "@/types";
 
@@ -33,10 +34,12 @@ async function getLeaderboard(): Promise<LeaderboardUser[]> {
     },
   });
 
-  const actualChampion = process.env.ACTUAL_CHAMPION ?? "";
-  const actualTopScorer = process.env.ACTUAL_TOP_SCORER ?? "";
-  const actualTopAssist = process.env.ACTUAL_TOP_ASSIST ?? "";
-  const actualBestGoalkeeper = process.env.ACTUAL_BEST_GOALKEEPER ?? "";
+  const {
+    champion: actualChampion,
+    topScorer: actualTopScorer,
+    topAssist: actualTopAssist,
+    bestGoalkeeper: actualBestGoalkeeper,
+  } = await getActualTournamentResults();
 
   return users
     .map((user) => {
