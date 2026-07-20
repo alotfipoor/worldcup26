@@ -5,6 +5,7 @@ import PageWrapper from "@/components/layout/PageWrapper";
 import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 import TimelineChart from "@/components/leaderboard/TimelineChart";
 import AutoRefresh from "@/components/AutoRefresh";
+import ChampionConfetti from "@/components/leaderboard/ChampionConfetti";
 import { calculateTournamentPoints } from "@/lib/scoring";
 import { getActualTournamentResults } from "@/lib/tournament";
 import { getTimelineData } from "@/lib/timeline";
@@ -101,14 +102,16 @@ export default async function LeaderboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const [users, timelineData] = await Promise.all([
+  const [users, timelineData, actualResults] = await Promise.all([
     getLeaderboard(),
     getTimelineData(),
+    getActualTournamentResults(),
   ]);
 
   return (
     <PageWrapper>
       <AutoRefresh intervalMs={60_000} />
+      <ChampionConfetti active={!!actualResults.champion} />
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-bold">Standings</h1>

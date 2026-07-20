@@ -3,8 +3,14 @@ import { redirect } from "next/navigation";
 import PageWrapper from "@/components/layout/PageWrapper";
 import TournamentForm from "@/components/tournament/TournamentForm";
 import TournamentStatsCharts from "@/components/tournament/TournamentStatsCharts";
+import ActualResults from "@/components/tournament/ActualResults";
 import { prisma } from "@/lib/prisma";
-import { getTournamentWindow, isTournamentLocked, getTournamentStats } from "@/lib/tournament";
+import {
+  getTournamentWindow,
+  isTournamentLocked,
+  getTournamentStats,
+  getActualTournamentResults,
+} from "@/lib/tournament";
 
 export const revalidate = 0;
 
@@ -17,7 +23,7 @@ export default async function TournamentPage() {
     isTournamentLocked(),
   ]);
 
-  const [initial, postGroup, stats] = await Promise.all([
+  const [initial, postGroup, stats, actualResults] = await Promise.all([
     prisma.tournamentPrediction.findUnique({
       where: { userId_window: { userId: session.userId, window: "INITIAL" } },
     }),
@@ -25,7 +31,10 @@ export default async function TournamentPage() {
       where: { userId_window: { userId: session.userId, window: "POST_GROUP" } },
     }),
     locked ? getTournamentStats() : Promise.resolve(null),
+    getActualTournamentResults(),
   ]);
+
+  const latestPrediction = postGroup ?? initial;
 
   return (
     <PageWrapper>
@@ -48,6 +57,8 @@ export default async function TournamentPage() {
             Tournament predictions are locked — knockout rounds have started.
           </div>
         )}
+
+        <ActualResults actual={actualResults} prediction={latestPrediction} />
 
         <TournamentForm
           window={window}
